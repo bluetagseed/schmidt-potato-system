@@ -1,14 +1,57 @@
-<!-- Live truck loading tracker with visual pallet placement map, 3D truck view, scan integration -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Truck Loading Chart</title>
+    <script src="data-hub.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 50%, #2BFF88 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 100%); color: white; padding: 30px; text-align: center; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; }
+        .content { padding: 40px; }
+        .truck-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 800px; margin: 20px auto; }
+        .pallet-slot { background: #fff; border: 2px dashed #ccc; border-radius: 8px; padding: 20px; min-height: 100px; text-align: center; cursor: pointer; }
+        .pallet-slot.occupied { background: #4CAF50; color: white; border: 2px solid #2e7d32; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0; }
+        .stat-card { background: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 100%); color: white; padding: 25px; border-radius: 12px; text-align: center; }
+        .stat-value { font-size: 2.5em; font-weight: bold; }
+        .scan-input { width: 100%; padding: 15px; border: 2px solid #2BD2FF; border-radius: 8px; font-size: 1.2em; text-align: center; margin: 20px 0; }
+        .btn { padding: 15px 30px; border: none; border-radius: 8px; font-size: 1.1em; font-weight: 600; cursor: pointer; margin: 10px 5px; }
+        .btn-primary { background: linear-gradient(135deg, #FA8BFF 0%, #2BD2FF 100%); color: white; }
+        .btn-success { background: #4CAF50; color: white; }
+        .btn-danger { background: #f44336; color: white; }
+    </style>
 </head>
 <body>
-    <h1>Truck Loading Chart</h1>
-    <p>Live truck loading tracker with visual pallet placement map and 3D truck view.</p>
-    <!-- Additional code goes here -->
+    <div class="container">
+        <div class="header">
+            <h1>🚛 Truck Loading Chart</h1>
+            <p>Live Visual Pallet Placement Tracker</p>
+        </div>
+        <div class="content">
+            <div class="stats">
+                <div class="stat-card"><div class="stat-value" id="loadedCount">0</div><div>Pallets Loaded</div></div>
+                <div class="stat-card"><div class="stat-value" id="capacityRemaining">20</div><div>Capacity Remaining</div></div>
+                <div class="stat-card"><div class="stat-value" id="loadPercent">0%</div><div>Load Progress</div></div>
+            </div>
+            <input type="text" class="scan-input" id="palletScan" placeholder="Scan pallet barcode" autofocus>
+            <button class="btn btn-success" onclick="loadPallet()">Load Pallet</button>
+            <div class="truck-grid" id="truckGrid"></div>
+            <button class="btn btn-primary" onclick="exportReport()">Export Report</button>
+            <button class="btn btn-danger" onclick="clearTruck()">Clear Truck</button>
+        </div>
+    </div>
+    <script>
+        const CAPACITY = 20; let pallets = [];
+        function initGrid() { const grid = document.getElementById('truckGrid'); for (let i = 1; i <= CAPACITY; i++) { const slot = document.createElement('div'); slot.className = 'pallet-slot'; slot.id = 'slot-' + i; slot.innerHTML = 'Slot ' + i; grid.appendChild(slot); } }
+        function loadPallet() { const id = document.getElementById('palletScan').value.trim(); if (id && pallets.length < CAPACITY) { pallets.push({id: id, slot: pallets.length + 1}); updateView(); document.getElementById('palletScan').value = ''; } }
+        function updateView() { pallets.forEach(p => { const slot = document.getElementById('slot-' + p.slot); slot.className = 'pallet-slot occupied'; slot.innerHTML = p.id; }); document.getElementById('loadedCount').textContent = pallets.length; document.getElementById('capacityRemaining').textContent = CAPACITY - pallets.length; document.getElementById('loadPercent').textContent = Math.round((pallets.length / CAPACITY) * 100) + '%'; }
+        function clearTruck() { if (confirm('Clear all pallets?')) { pallets = []; initGrid(); updateView(); } }
+        function exportReport() { alert('Exporting report...'); }
+        initGrid();
+    </script>
 </body>
 </html>
