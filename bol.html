@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill of Lading Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            color: #11998e;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #11998e;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #11998e;
+            box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+        }
+        
+        input[readonly] {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 10px 10px 0;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(17, 153, 142, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .signature-section {
+            background: #f5f5ff;
+            border: 2px solid #11998e;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .signature-box {
+            background: white;
+            border: 2px dashed #11998e;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .signature-box.signed {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+        
+        .signature-image {
+            max-width: 100%;
+            max-height: 120px;
+        }
+        
+        .qr-container {
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .header {
+                background: white;
+                color: black;
+                border-bottom: 3px solid black;
+            }
+            .btn, .no-print {
+                display: none !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📄 Bill of Lading</h1>
+            <p>Schmidt Potato - Sabin, MN</p>
+        </div>
+        
+        <div class="content">
+            <form id="bolForm">
+                
+                <!-- BOL Information -->
+                <div class="section-title">📋 BOL Information</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>BOL Number (Auto-Generated)</label>
+                        <input type="text" id="bolNumber" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="bolDate" required>
+                    </div>
+                </div>
+                
+                <!-- Shipper Information -->
+                <div class="section-title">📦 Shipper (From)</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" id="shipperName" value="Schmidt Potato" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" id="shipperPhone" value="218-493-4254" readonly>
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label>Address</label>
+                    <textarea id="shipperAddress" readonly>9036 70th St S
+Sabin, MN 56580</textarea>
+                </div>
+                
+                <!-- Consignee Information -->
+                <div class="section-title">🏢 Consignee (To)</div>
+                
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label>Select Customer</label>
+                        <select id="customerSelect">
+                            <option value="">-- Select or type new --</option>
+                            <option value="sysco">Sysco Foods - Minneapolis</option>
+                            <option value="usfoods">US Foods - Fargo</option>
+                            <option value="gordon">Gordon Food Service - Duluth</option>
+                            <option value="pfg">Performance Food Group - St. Paul</option>
+                            <option value="reinhart">Reinhart Foodservice - Moorhead</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Company Name *</label>
+                        <input type="text" id="consigneeName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="text" id="consigneePhone">
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label>Delivery Address *</label>
+                    <textarea id="consigneeAddress" required></textarea>
+                </div>
+                
+                <!-- Carrier Information -->
+                <div class="section-title">🚛 Carrier Information</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Carrier Name</label>
+                        <input type="text" id="carrierName">
+                    </div>
+                    <div class="form-group">
+                        <label>Truck/Trailer Number</label>
+                        <input type="text" id="truckNumber">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Driver Name</label>
+                        <input type="text" id="driverName">
+                    </div>
+                    <div class="form-group">
+                        <label>PO Number</label>
+                        <input type="text" id="poNumber">
+                    </div>
+                </div>
+                
+                <!-- Shipment Details -->
+                <div class="section-title">📦 Shipment Details</div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Number of Pallets *</label>
+                        <input type="number" id="palletCount" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Weight (LBS) *</label>
+                        <input type="number" id="totalWeight" min="1" required>
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label>Description of Articles</label>
+                    <textarea id="description" placeholder="e.g., Potatoes - Red Pontiac, Blue Tag Size A, 50 LBS bags"></textarea>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label>Special Instructions</label>
+                    <textarea id="specialInstructions" placeholder="e.g., Keep from freezing, Temperature controlled"></textarea>
+                </div>
+                
+                <!-- Signatures Section -->
+                <div class="section-title">✍️ Electronic Signatures</div>
+                
+                <div class="signature-section">
+                    <h3>Shipper Signature</h3>
+                    <div class="signature-box" id="shipperSigBox">
+                        <div id="shipperSigPlaceholder">
+                            <p>No signature yet</p>
+                            <button type="button" class="btn btn-primary" onclick="requestSignature('shipper')">📱 Request Signature</button>
+                        </div>
+                        <img id="shipperSigImage" class="signature-image" style="display: none;">
+                    </div>
+                    <div class="qr-container" id="shipperQR" style="display: none;"></div>
+                </div>
+                
+                <div class="signature-section">
+                    <h3>Driver Signature</h3>
+                    <div class="signature-box" id="driverSigBox">
+                        <div id="driverSigPlaceholder">
+                            <p>No signature yet</p>
+                            <button type="button" class="btn btn-primary" onclick="requestSignature('driver')">📱 Request Signature</button>
+                        </div>
+                        <img id="driverSigImage" class="signature-image" style="display: none;">
+                    </div>
+                    <div class="qr-container" id="driverQR" style="display: none;"></div>
+                </div>
+                
+                <div class="signature-section">
+                    <h3>Receiver Signature</h3>
+                    <div class="signature-box" id="receiverSigBox">
+                        <div id="receiverSigPlaceholder">
+                            <p>No signature yet</p>
+                            <button type="button" class="btn btn-primary" onclick="requestSignature('receiver')">📱 Request Signature</button>
+                        </div>
+                        <img id="receiverSigImage" class="signature-image" style="display: none;">
+                    </div>
+                    <div class="qr-container" id="receiverQR" style="display: none;"></div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div style="margin-top: 30px;">
+                    <button type="submit" class="btn btn-success">💾 Save BOL</button>
+                    <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print BOL</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+                </div>
+                
+            </form>
+        </div>
+    </div>
+
+    <script src="data-hub.js"></script>
+    <script>
+        let currentBOLNumber = '';
+        
+        // Initialize form
+        function initForm() {
+            const counter = DataHub.getBOLCounter();
+            currentBOLNumber = 'BOL-' + String(counter).padStart(4, '0');
+            document.getElementById('bolNumber').value = currentBOLNumber;
+            
+            const today = new Date();
+            const dateString = today.toISOString().split('T')[0];
+            document.getElementById('bolDate').value = dateString;
+            
+            checkForReturnedSignature();
+        }
+        
+        // Handle customer selection
+        document.getElementById('customerSelect').addEventListener('change', function() {
+            const selected = this.value;
+            if (!selected) return;
+            
+            const customers = DataHub.getCustomers();
+            if (customers[selected]) {
+                document.getElementById('consigneeName').value = customers[selected].name;
+                document.getElementById('consigneeAddress').value = customers[selected].address;
+            }
+        });
+        
+        // Request signature
+        function requestSignature(role) {
+            const signatureURL = 'signature-capture.html?bol=' + currentBOLNumber + '&role=' + role;
+            const fullURL = window.location.origin + window.location.pathname.replace('bol.html', '') + signatureURL;
+            
+            const qrContainer = document.getElementById(role + 'QR');
+            qrContainer.innerHTML = '<p><strong>Scan QR Code or use link:</strong></p><div id="' + role + 'QRCode"></div><p style="font-size: 0.8em; word-break: break-all; margin-top: 10px;">' + fullURL + '</p>';
+            qrContainer.style.display = 'block';
+            
+            new QRCode(document.getElementById(role + 'QRCode'), {
+                text: fullURL,
+                width: 200,
+                height: 200
+            });
+            
+            alert('QR Code generated! \n\nOptions:\n1. Scan QR code with mobile device\n2. Copy and text/email the link\n3. Click "Open Signature Page" to sign on this device');
+            
+            if (confirm('Open signature page in new window?')) {
+                window.open(signatureURL, '_blank');
+            }
+        }
+        
+        // Check for returned signature
+        function checkForReturnedSignature() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const returnedRole = urlParams.get('signed');
+            const signatureData = localStorage.getItem('signature_' + currentBOLNumber + '_' + returnedRole);
+            
+            if (returnedRole && signatureData) {
+                applySignature(returnedRole, signatureData);
+            }
+            
+            ['shipper', 'driver', 'receiver'].forEach(role => {
+                const sig = localStorage.getItem('signature_' + currentBOLNumber + '_' + role);
+                if (sig) {
+                    applySignature(role, sig);
+                }
+            });
+        }
+        
+        // Apply signature
+        function applySignature(role, signatureDataURL) {
+            document.getElementById(role + 'SigPlaceholder').style.display = 'none';
+            const img = document.getElementById(role + 'SigImage');
+            img.src = signatureDataURL;
+            img.style.display = 'block';
+            document.getElementById(role + 'SigBox').classList.add('signed');
+            document.getElementById(role + 'QR').style.display = 'none';
+        }
+        
+        // Form submission
+        document.getElementById('bolForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const bolData = {
+                BOLNumber: currentBOLNumber,
+                Date: document.getElementById('bolDate').value,
+                ShipperName: document.getElementById('shipperName').value,
+                ShipperPhone: document.getElementById('shipperPhone').value,
+                ShipperAddress: document.getElementById('shipperAddress').value,
+                ConsigneeName: document.getElementById('consigneeName').value,
+                ConsigneePhone: document.getElementById('consigneePhone').value,
+                ConsigneeAddress: document.getElementById('consigneeAddress').value,
+                CarrierName: document.getElementById('carrierName').value,
+                TruckNumber: document.getElementById('truckNumber').value,
+                DriverName: document.getElementById('driverName').value,
+                PONumber: document.getElementById('poNumber').value,
+                PalletCount: document.getElementById('palletCount').value,
+                TotalWeight: document.getElementById('totalWeight').value,
+                Description: document.getElementById('description').value,
+                SpecialInstructions: document.getElementById('specialInstructions').value,
+                ShipperSignature: localStorage.getItem('signature_' + currentBOLNumber + '_shipper') ? 'Signed' : 'Not Signed',
+                DriverSignature: localStorage.getItem('signature_' + currentBOLNumber + '_driver') ? 'Signed' : 'Not Signed',
+                ReceiverSignature: localStorage.getItem('signature_' + currentBOLNumber + '_receiver') ? 'Signed' : 'Not Signed'
+            };
+            
+            DataHub.saveBOL(bolData);
+            DataHub.incrementBOLCounter();
+            
+            alert('✅ BOL saved successfully!\n\nBOL Number: ' + currentBOLNumber);
+            
+            if (confirm('Would you like to print the BOL now?')) {
+                window.print();
+            }
+            
+            window.location.href = 'dashboard.html';
+        });
+        
+        initForm();
+    </script>
+</body>
+</html>
