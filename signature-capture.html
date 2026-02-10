@@ -1,1 +1,280 @@
-Mobile signature capture page with HTML5 canvas for drawing signatures with touch and mouse support, saves signature to localStorage and returns to BOL page
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signature Capture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .info-box {
+            background: #f5f5ff;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .canvas-container {
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 20px 0;
+            background: white;
+        }
+        
+        #signatureCanvas {
+            display: block;
+            width: 100%;
+            touch-action: none;
+            cursor: crosshair;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 10px 10px 0;
+            width: calc(50% - 5px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+            width: 100%;
+        }
+        
+        .btn-success:hover {
+            background: #45a049;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .btn {
+                width: 100%;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>✍️ Electronic Signature</h1>
+            <p>Schmidt Potato System</p>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <h3 id="signatureRole">Signature Required</h3>
+                <p><strong>BOL Number:</strong> <span id="bolNumber">-</span></p>
+                <p style="margin-top: 10px;">Please sign in the box below using your finger or stylus.</p>
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="signatureCanvas" width="540" height="300"></canvas>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="clearSignature()">🗑️ Clear</button>
+                <button class="btn btn-secondary" onclick="goBack()">← Cancel</button>
+            </div>
+            
+            <button class="btn btn-success" onclick="saveSignature()">✅ Save Signature</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('signatureCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let hasSignature = false;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const bolNumber = urlParams.get('bol') || 'Unknown';
+        const role = urlParams.get('role') || 'unknown';
+        
+        document.getElementById('bolNumber').textContent = bolNumber;
+        const roleNames = {
+            'shipper': 'Shipper Signature',
+            'driver': 'Driver Signature',
+            'receiver': 'Receiver Signature'
+        };
+        document.getElementById('signatureRole').textContent = roleNames[role] || 'Signature Required';
+        
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+        
+        canvas.addEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchmove', handleTouchMove);
+        canvas.addEventListener('touchend', stopDrawing);
+        
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            lastX = e.clientX - rect.left;
+            lastY = e.clientY - rect.top;
+            hasSignature = true;
+        }
+        
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+            
+            lastX = currentX;
+            lastY = currentY;
+        }
+        
+        function stopDrawing() {
+            isDrawing = false;
+        }
+        
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            isDrawing = true;
+            lastX = touch.clientX - rect.left;
+            lastY = touch.clientY - rect.top;
+            hasSignature = true;
+        }
+        
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const currentX = touch.clientX - rect.left;
+            const currentY = touch.clientY - rect.top;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+            
+            lastX = currentX;
+            lastY = currentY;
+        }
+        
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            hasSignature = false;
+        }
+        
+        function saveSignature() {
+            if (!hasSignature) {
+                alert('⚠️ Please provide a signature before saving!');
+                return;
+            }
+            
+            const signatureDataURL = canvas.toDataURL('image/png');
+            
+            const storageKey = 'signature_' + bolNumber + '_' + role;
+            localStorage.setItem(storageKey, signatureDataURL);
+            
+            alert('✅ Signature saved successfully!');
+            
+            window.location.href = 'bol.html?signed=' + role;
+        }
+        
+        function goBack() {
+            if (hasSignature && !confirm('Discard signature and go back?')) {
+                return;
+            }
+            window.location.href = 'bol.html';
+        }
+    </script>
+</body>
+</html>
