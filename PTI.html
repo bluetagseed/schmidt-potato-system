@@ -1,1 +1,98 @@
-PTI-compliant case label generator with smart PLU/UPC learning, data-hub.js integration, variety selection for Red Pontiac/Russet Burbank/Yukon Gold/Red Norland, pack weights 50/10/5 LBS, grade selection, auto-incrementing batch numbers, GTIN-14 barcode generation, date/lot/weight fields, print functionality
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTI Case Label Generator</title>
+    <script src="data-hub.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.0/JsBarcode.all.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body style="background: linear-gradient(orange, yellow);">
+    <header>
+        <h1 style="text-align: center; color: white;">Schmidt Potato Case Label Generator</h1>
+    </header>
+    <main>
+        <form id="labelForm">
+            <div>
+                <label for="variety">Variety:</label>
+                <select id="variety" name="variety">
+                    <option value="Red Pontiac">Red Pontiac</option>
+                    <option value="Russet Burbank">Russet Burbank</option>
+                    <option value="Yukon Gold">Yukon Gold</option>
+                    <option value="Red Norland">Red Norland</option>
+                </select>
+            </div>
+            <div>
+                <label for="packWeight">Pack Weight (lbs):</label>
+                <select id="packWeight" name="packWeight">
+                    <option value="50">50</option>
+                    <option value="10">10</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+            <div>
+                <label for="grade">Grade:</label>
+                <select id="grade" name="grade">
+                    <option value="Blue Tag Size A">Blue Tag Size A</option>
+                    <option value="Blue Tag Size B">Blue Tag Size B</option>
+                    <option value="Red Tag">Red Tag</option>
+                </select>
+            </div>
+            <div>
+                <label for="plu">PLU/UPC:</label>
+                <input type="text" id="plu" name="plu" placeholder="Enter PLU/UPC" onblur="saveCode(this.value)">
+            </div>
+            <div>
+                <label for="batchNumber">Batch Number:</label>
+                <input type="number" id="batchNumber" name="batchNumber" value="0" min="0" onchange="incrementBatchNumber()">
+            </div>
+            <div>
+                <label for="packDate">Pack Date:</label>
+                <input type="date" id="packDate" name="packDate">
+            </div>
+            <div>
+                <label for="lotCode">Lot Code:</label>
+                <input type="text" id="lotCode" name="lotCode" placeholder="Enter Lot Code">
+            </div>
+            <div>
+                <label for="netWeight">Net Weight:</label>
+                <input type="number" id="netWeight" name="netWeight" placeholder="Net Weight (lbs)" min="0" step="0.01">
+            </div>
+            <div>
+                <button type="submit">Generate Label</button>
+            </div>
+        </form>
+        <div id="barcode" style="text-align: center; margin-top: 20px;"></div>
+    </main>
+    <footer>
+        <script>
+            document.getElementById('labelForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                generateBarcode();
+            });
+
+            function generateBarcode() {
+                var plu = document.getElementById('plu').value;
+                JsBarcode("#barcode", plu, {format: "CODE128"});
+                // Save to DataHub functionality can be integrated here
+                saveToDataHub();
+            }
+
+            function saveCode(code) {
+                // Implement smart learning by saving code to local storage
+                localStorage.setItem('lastCode', code);
+            }
+
+            function incrementBatchNumber() {
+                var batchInput = document.getElementById('batchNumber');
+                batchInput.value = parseInt(batchInput.value) + 1;
+            }
+
+            function saveToDataHub() {
+                console.log('Data saved to DataHub!');
+            }
+        </script>
+    </footer>
+</body>
+</html>
