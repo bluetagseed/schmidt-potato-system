@@ -1,14 +1,119 @@
-<!-- Customer shipping label generator with delivery information, customer selection, data-hub.js integration -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pallet Shipping</title>
+    <title>Customer Shipping Label Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jbarcode/3.1.1/jbarcode.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jbarcode/3.1.1/jbarcode.all.min.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f093fb, #f5576c);
+            font-family: Arial, sans-serif;
+            color: #333;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #barcode {
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Customer Shipping Label Generator</h1>
-    <p>Generates customer shipping labels with delivery information and customer selection.</p>
-    <!-- Additional code goes here -->
+    <div class="container">
+        <h1>Shipping Label Generator</h1>
+        <label for="customer">Select Customer:</label>
+        <select id="customer">
+            <option value="Sysco Foods">Sysco Foods</option>
+            <option value="US Foods">US Foods</option>
+            <option value="Gordon Food Service">Gordon Food Service</option>
+        </select>
+
+        <label for="shipFrom">Ship From Address:</label>
+        <textarea id="shipFrom" rows="3"></textarea>
+
+        <label for="shipTo">Ship To Address:</label>
+        <textarea id="shipTo" rows="3"></textarea>
+
+        <label for="palletCount">Pallet Count:</label>
+        <input type="number" id="palletCount" />
+
+        <label for="totalWeight">Total Weight:</label>
+        <input type="number" id="totalWeight" />
+
+        <label for="productDescription">Product Description:</label>
+        <textarea id="productDescription" rows="3"></textarea>
+
+        <label for="deliveryDate">Delivery Date:</label>
+        <input type="date" id="deliveryDate" />
+
+        <label for="specialInstructions">Special Instructions:</label>
+        <textarea id="specialInstructions" rows="3"></textarea>
+
+        <button onclick="generateLabel()">Generate Label</button>
+
+        <div id="barcode"></div>
+        <button onclick="window.print()">Print</button>
+    </div>
+
+    <script>
+        function generateLabel() {
+            const customer = document.getElementById('customer').value;
+            const shipFrom = document.getElementById('shipFrom').value;
+            const shipTo = document.getElementById('shipTo').value;
+            const palletCount = document.getElementById('palletCount').value;
+            const totalWeight = document.getElementById('totalWeight').value;
+            const productDescription = document.getElementById('productDescription').value;
+            const deliveryDate = document.getElementById('deliveryDate').value;
+            const specialInstructions = document.getElementById('specialInstructions').value;
+
+            const labelContent = `
+                Customer: ${customer}
+                Ship From: ${shipFrom}
+                Ship To: ${shipTo}
+                Pallet Count: ${palletCount}
+                Total Weight: ${totalWeight}
+                Product Description: ${productDescription}
+                Delivery Date: ${deliveryDate}
+                Special Instructions: ${specialInstructions}
+            `;
+            var barcodeValue = 'BarcodeValueHere'; // Set your barcode value here
+            JsBarcode("#barcode", barcodeValue, {
+                format: "CODE128",
+                displayValue: true
+            });
+
+            alert(labelContent); // For demo purpose
+        }
+    </script>
 </body>
 </html>
