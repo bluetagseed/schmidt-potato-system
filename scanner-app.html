@@ -1,14 +1,54 @@
-<!-- Mobile warehouse scanner app with Eyoyo scanner support, CSV upload, barcode scanning, real-time pick list tracking -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner App</title>
+    <title>Mobile Warehouse Scanner</title>
+    <script src="data-hub.js"></script>
 </head>
 <body>
-    <h1>Mobile Warehouse Scanner App</h1>
-    <p>Supports Eyoyo scanner, CSV uploads, barcode scanning, and real-time pick list tracking.</p>
-    <!-- Additional code goes here -->
+    <h1>Mobile Warehouse Scanner</h1>
+    <section id="scanner">
+        <h2>Eyoyo Scanner Support</h2>
+        <div>
+            <input type="text" id="barcodeInput" placeholder="Scan barcode here" autofocus />
+            <button id="scanButton">Scan</button>
+        </div>
+    </section>
+    <section id="upload">
+        <h2>CSV Upload</h2>
+        <input type="file" id="csvUpload" accept=".csv" />
+        <button id="uploadButton">Upload CSV</button>
+    </section>
+    <section id="realTimeScanning">
+        <h2>Real-Time Barcode Scanning</h2>
+        <div id="scannedList"></div>
+    </section>
+    <section id="pickListTracking">
+        <h2>Pick List Tracking</h2>
+        <div id="pickList"></div>
+    </section>
+    <section id="statisticsDisplay">
+        <h2>Statistics Display</h2>
+        <div id="statistics"></div>
+    </section>
+    <section id="excelExport">
+        <h2>Export to Excel</h2>
+        <button id="exportButton">Export</button>
+    </section>
+    <script>
+        // JavaScript functionality for barcode scanning, CSV upload, etc.
+        document.getElementById('scanButton').addEventListener('click', function() {
+            var barcode = document.getElementById('barcodeInput').value;
+            // Real-time scanning logic...
+        });
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            var file = document.getElementById('csvUpload').files[0];
+            // CSV upload functionality...
+        });
+        document.getElementById('exportButton').addEventListener('click', function() {
+            // Export to Excel functionality...
+        });
+    </script>
 </body>
 </html>
