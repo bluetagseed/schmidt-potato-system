@@ -242,7 +242,7 @@
         </div>
         
         <div class="form-container">
-            <form id="pickListForm">
+            <form id="pickListForm" onsubmit="handleSubmit(event)">
                 
                 <!-- Order Information Section -->
                 <div class="section-title">📦 Order Information</div>
@@ -341,11 +341,11 @@
     </div>
 
     <script>
-        var productCount = 0;
-        var products = [];
+        let productCount = 0;
+        let products = [];
         
         // Customer database
-        var customers = {
+        const customers = {
             'sysco': 'Sysco Foods - Minneapolis',
             'usfoods': 'US Foods - Fargo',
             'gordon': 'Gordon Food Service - Duluth',
@@ -354,7 +354,7 @@
         };
         
         // Variety codes
-        var varietyCodes = {
+        const varietyCodes = {
             'Russet Burbank': 'RB',
             'Red Pontiac': 'RP',
             'Yukon Gold': 'YG',
@@ -569,15 +569,19 @@
             }
         }
         
+        // Handle form submission
+        function handleSubmit(event) {
+            event.preventDefault();
+            alert('Pick list generated successfully! This would normally save the data and generate exports.');
+            return false;
+        }
+        
         // Initialize on page load
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initializeForm);
         } else {
             initializeForm();
         }
-        
-        window.addEventListener('load', initializeForm);
-        setTimeout(initializeForm, 500);
         
         // Reset form
         function resetForm() {
