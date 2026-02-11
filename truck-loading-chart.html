@@ -609,20 +609,7 @@
                 <p>Schmidt Potato - Live Loading Tracker</p>
             </div>
 
-            <!-- Section 1: Truck Selection -->
-            <div class="section-card">
-                <div class="section-title">🚛 Select or Add Truck</div>
-                <div class="form-group">
-                    <select id="truckSelect">
-                        <option value="">-- Select Saved Truck or Create New --</option>
-                    </select>
-                </div>
-                <div class="btn-group">
-                    <button onclick="saveTruck()">💾 Save</button>
-                    <button onclick="deleteTruck()" class="danger">🗑️ Delete</button>
-                    <button onclick="newTruck()" class="secondary">➕ New</button>
-                </div>
-            </div>
+           
 
             <!-- Section 2: Customer Selection -->
             <div class="section-card">
@@ -637,6 +624,25 @@
                     <button onclick="deleteCustomer()" class="danger">🗑️ Delete</button>
                     <button onclick="newCustomer()" class="secondary">➕ New</button>
                 </div>
+            </div>
+            <!-- Section 1: Truck Selection -->
+            <div class="section-card">
+                <div class="section-title">🚛 Select or Add Truck</div>
+                <div class="form-group">
+                    <select id="truckSelect">
+                        <option value="">-- Select Saved Truck or Create New --</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button onclick="saveTruck()">💾 Save</button>
+                    <button onclick="deleteTruck()" class="danger">🗑️ Delete</button>
+                    <button onclick="newTruck()" class="secondary">➕ New</button>
+                </div>
+
+            <div class="form-group">
+                <label>Customer Name *</label>
+                <input type="text" id="customerName" placeholder="e.g., ABC Company">
+            </div> 
             </div>
 
             <!-- Section 3: Truck & Customer Information -->
@@ -653,10 +659,7 @@
                     <input type="text" id="truckNumber" placeholder="e.g., #101">
                 </div>
 
-                <div class="form-group">
-                    <label>Customer Name *</label>
-                    <input type="text" id="customerName" placeholder="e.g., ABC Company">
-                </div>
+              
 
                 <div class="form-group">
                     <label>Default Driver Name</label>
