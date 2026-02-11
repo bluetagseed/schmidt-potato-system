@@ -1200,7 +1200,7 @@
                 emptyMessage.style.display = 'none';
             }
 
-            // Clear and rebuild row list
+            // Build and insert row items HTML
             const rowItems = truckConfig.rows.map((row, index) => `
                 <div class="row-item">
                     <span>Row ${row.number} <span class="badge ${row.type}">${row.type.toUpperCase()}</span></span>
@@ -1217,10 +1217,11 @@
             const existingRows = rowList.querySelectorAll('.row-item');
             existingRows.forEach(row => row.remove());
             
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = rowItems;
-            while (tempDiv.firstChild) {
-                rowList.appendChild(tempDiv.firstChild);
+            // Insert new row items after the empty message using insertAdjacentHTML
+            if (emptyMessage) {
+                emptyMessage.insertAdjacentHTML('afterend', rowItems);
+            } else {
+                rowList.innerHTML = rowItems;
             }
         }
 
