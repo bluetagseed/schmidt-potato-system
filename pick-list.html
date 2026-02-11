@@ -518,7 +518,7 @@
                 if (productCard) {
                     var variety = productCard.querySelector('.product-variety').value;
                     var weightSelect = productCard.querySelector('.product-weight');
-                    var weight = weightSelect.value === 'bulk' ? weightSelect.getAttribute('data-custom-weight') : weightSelect.value;
+                    var weight = weightSelect.value === 'bulk' ? (weightSelect.getAttribute('data-custom-weight') || '') : weightSelect.value;
                     var grade = productCard.querySelector('.product-grade').value;
                     var totalBags = parseInt(productCard.querySelector('.product-total-bags').value) || 0;
                     var customBagsPerPallet = parseInt(productCard.querySelector('.product-bags-per-pallet').value) || 40;
@@ -612,7 +612,7 @@
                 if (productCard) {
                     var variety = productCard.querySelector('.product-variety').value;
                     var weightSelect = productCard.querySelector('.product-weight');
-                    var weight = weightSelect.value === 'bulk' ? weightSelect.getAttribute('data-custom-weight') : weightSelect.value;
+                    var weight = weightSelect.value === 'bulk' ? (weightSelect.getAttribute('data-custom-weight') || '') : weightSelect.value;
                     var grade = productCard.querySelector('.product-grade').value;
                     var totalBags = parseInt(productCard.querySelector('.product-total-bags').value) || 0;
                     var customBagsPerPallet = parseInt(productCard.querySelector('.product-bags-per-pallet').value) || 40;
