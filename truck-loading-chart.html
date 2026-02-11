@@ -29,6 +29,29 @@
             padding: 30px;
         }
 
+        .main-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .main-header h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-header p {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.1em;
+            margin: 0;
+        }
+
         h1 {
             color: #1e3c72;
             text-align: center;
@@ -41,8 +64,25 @@
             margin-top: 25px;
             margin-bottom: 15px;
             font-size: 1.6em;
-            border-bottom: 2px solid #2a5298;
-            padding-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .section-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            color: #1e3c72;
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         h3 {
@@ -61,14 +101,15 @@
         }
 
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: #555;
+            color: #333;
+            font-size: 0.95em;
         }
 
         input[type="text"],
@@ -76,17 +117,24 @@
         input[type="tel"],
         select {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
             font-size: 1em;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         input:focus,
         select:focus {
             outline: none;
             border-color: #2a5298;
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1);
+        }
+
+        input::placeholder {
+            color: #999;
+            font-style: italic;
         }
 
         button {
@@ -94,12 +142,13 @@
             color: white;
             border: none;
             padding: 12px 24px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 1em;
             font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
             margin: 5px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
         button:hover {
@@ -132,9 +181,10 @@
 
         .row-config-section {
             background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
+            padding: 25px;
+            border-radius: 12px;
             margin: 20px 0;
+            border: 2px solid #e0e0e0;
         }
 
         .row-list {
@@ -178,14 +228,16 @@
         }
 
         .row-counter {
-            font-size: 1.2em;
+            font-size: 1.3em;
             font-weight: 700;
             color: #1e3c72;
             text-align: center;
-            padding: 15px;
-            background: #e9ecef;
+            padding: 20px;
+            background: white;
             border-radius: 8px;
             margin: 15px 0;
+            border: 2px solid #2a5298;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .truck-info-header {
@@ -552,71 +604,79 @@
     <div class="container">
         <!-- SCREEN 1: SETUP CONFIGURATION -->
         <div id="setupScreen" class="screen active">
-            <h1>🚛 Truck Loading System</h1>
-            <p style="text-align: center; color: #6c757d; margin-bottom: 30px;">Schmidt Potato - Truck Loading Management</p>
-
-            <!-- Truck Management -->
-            <h2>Truck Management</h2>
-            <div class="form-group">
-                <label>Select Saved Truck:</label>
-                <select id="truckSelect">
-                    <option value="">-- Select a Truck --</option>
-                </select>
+            <div class="main-header">
+                <h1>🚛 Truck Loading Chart</h1>
+                <p>Schmidt Potato - Live Loading Tracker</p>
             </div>
 
-            <div class="form-group">
-                <label>Truck Name:</label>
-                <input type="text" id="truckName" placeholder="e.g., Semi-Truck 001">
+            <!-- Section 1: Truck Selection -->
+            <div class="section-card">
+                <div class="section-title">🚛 Select or Add Truck</div>
+                <div class="form-group">
+                    <select id="truckSelect">
+                        <option value="">-- Select Saved Truck or Create New --</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button onclick="saveTruck()">💾 Save</button>
+                    <button onclick="deleteTruck()" class="danger">🗑️ Delete</button>
+                    <button onclick="newTruck()" class="secondary">➕ New</button>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Truck Number:</label>
-                <input type="text" id="truckNumber" placeholder="e.g., T-001">
+            <!-- Section 2: Customer Selection -->
+            <div class="section-card">
+                <div class="section-title">👤 Select or Add Customer</div>
+                <div class="form-group">
+                    <select id="customerSelect">
+                        <option value="">-- Select Saved Customer or Create New --</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button onclick="saveCustomer()">💾 Save</button>
+                    <button onclick="deleteCustomer()" class="danger">🗑️ Delete</button>
+                    <button onclick="newCustomer()" class="secondary">➕ New</button>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Driver Name:</label>
-                <input type="text" id="driverName" placeholder="e.g., John Smith">
+            <!-- Section 3: Truck & Customer Information -->
+            <div class="section-card">
+                <div class="section-title">Truck &amp; Customer Information</div>
+                
+                <div class="form-group">
+                    <label>Truck Name/Description *</label>
+                    <input type="text" id="truckName" placeholder="e.g., Blue Freightliner">
+                </div>
+
+                <div class="form-group">
+                    <label>Truck Number *</label>
+                    <input type="text" id="truckNumber" placeholder="e.g., #101">
+                </div>
+
+                <div class="form-group">
+                    <label>Customer Name *</label>
+                    <input type="text" id="customerName" placeholder="e.g., ABC Company">
+                </div>
+
+                <div class="form-group">
+                    <label>Default Driver Name</label>
+                    <input type="text" id="driverName" placeholder="e.g., John Smith">
+                </div>
+
+                <div class="form-group">
+                    <label>Default Driver Phone</label>
+                    <input type="tel" id="driverPhone" placeholder="e.g., (701) 555-1234">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Driver Phone:</label>
-                <input type="tel" id="driverPhone" placeholder="e.g., 218-493-4254">
-            </div>
-
-            <div class="btn-group">
-                <button onclick="saveTruck()">💾 Save Truck</button>
-                <button onclick="deleteTruck()" class="danger">🗑️ Delete Truck</button>
-                <button onclick="newTruck()" class="secondary">➕ New Truck</button>
-            </div>
-
-            <!-- Customer Management -->
-            <h2>Customer Management</h2>
-            <div class="form-group">
-                <label>Select Saved Customer:</label>
-                <select id="customerSelect">
-                    <option value="">-- Select a Customer --</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Customer Name:</label>
-                <input type="text" id="customerName" placeholder="e.g., Sysco Foods">
-            </div>
-
-            <div class="btn-group">
-                <button onclick="saveCustomer()">💾 Save Customer</button>
-                <button onclick="deleteCustomer()" class="danger">🗑️ Delete Customer</button>
-                <button onclick="newCustomer()" class="secondary">➕ New Customer</button>
-            </div>
-
-            <!-- Row Configuration -->
-            <h2>Row Configuration (1-13 Rows)</h2>
-            <div class="row-config-section">
+            <!-- Section 4: Row Configuration -->
+            <div class="section-card">
+                <div class="section-title">📐 Loading Configuration - <span id="rowCountDisplay">0</span>/13 Rows</div>
+                
                 <div class="form-group">
                     <label>Quick Setup:</label>
                     <select id="quickSetup" onchange="applyQuickSetup()">
-                        <option value="">-- Choose Preset --</option>
+                        <option value="">-- Select to Auto-Generate Rows --</option>
                         <option value="13-single">13 Rows (Single-Wide)</option>
                         <option value="13-double">13 Rows (Double-Wide)</option>
                         <option value="10-double">10 Rows (Double-Wide)</option>
@@ -627,24 +687,31 @@
 
                 <div class="row-counter" id="rowCounter">0/13 Rows Configured</div>
 
-                <div class="row-list" id="rowList"></div>
+                <div class="row-list" id="rowList">
+                    <div class="alert alert-info" id="emptyRowMessage">
+                        No rows configured. Select dropdown above or click "Add Row" to start from Row 1.
+                    </div>
+                </div>
 
                 <div class="btn-group">
-                    <button onclick="addRow()">➕ Add Row</button>
+                    <button onclick="addRow()">➕ Add Row 1</button>
                     <button onclick="clearRows()" class="danger">🗑️ Clear All Rows</button>
                 </div>
             </div>
 
-            <div class="btn-group" style="margin-top: 30px;">
-                <button onclick="proceedToLoading()" class="success" style="font-size: 1.2em; padding: 15px 30px;">
-                    ▶️ Proceed to Loading Screen
+            <div class="btn-group" style="margin-top: 30px; justify-content: center;">
+                <button onclick="proceedToLoading()" class="success" style="font-size: 1.3em; padding: 16px 40px;">
+                    🚀 Start Loading
                 </button>
             </div>
         </div>
 
         <!-- SCREEN 2: LOADING SCREEN -->
         <div id="loadingScreen" class="screen">
-            <h1>🚛 Truck Loading</h1>
+            <div class="main-header">
+                <h1>🚛 Truck Loading Chart</h1>
+                <p>Schmidt Potato - Live Loading Tracker</p>
+            </div>
 
             <!-- Truck Info Header -->
             <div class="truck-info-header">
@@ -774,8 +841,10 @@
 
         <!-- SCREEN 3: COMPLETE SUMMARY -->
         <div id="completeScreen" class="screen">
-            <h1>✅ Loading Complete</h1>
-            <p style="text-align: center; color: #6c757d; margin-bottom: 30px;">Truck Loading Summary</p>
+            <div class="main-header">
+                <h1>✅ Loading Complete</h1>
+                <p>Truck Loading Summary</p>
+            </div>
 
             <!-- Truck Info Header (Summary) -->
             <div class="truck-info-header">
@@ -884,7 +953,7 @@
         function loadTrucksList() {
             const savedTrucks = JSON.parse(localStorage.getItem('savedTrucks') || '[]');
             const select = document.getElementById('truckSelect');
-            select.innerHTML = '<option value="">-- Select a Truck --</option>';
+            select.innerHTML = '<option value="">-- Select Saved Truck or Create New --</option>';
             
             savedTrucks.forEach((truck, index) => {
                 const option = document.createElement('option');
@@ -974,7 +1043,7 @@
         function loadCustomersList() {
             const savedCustomers = JSON.parse(localStorage.getItem('savedCustomers') || '[]');
             const select = document.getElementById('customerSelect');
-            select.innerHTML = '<option value="">-- Select a Customer --</option>';
+            select.innerHTML = '<option value="">-- Select Saved Customer or Create New --</option>';
             
             savedCustomers.forEach((customer, index) => {
                 const option = document.createElement('option');
@@ -1100,15 +1169,39 @@
         function updateRowDisplay() {
             const rowList = document.getElementById('rowList');
             const rowCounter = document.getElementById('rowCounter');
+            const rowCountDisplay = document.getElementById('rowCountDisplay');
+            const emptyMessage = document.getElementById('emptyRowMessage');
+            const addRowBtn = document.querySelector('button[onclick="addRow()"]');
 
+            // Update counter
             rowCounter.textContent = `${truckConfig.rows.length}/13 Rows Configured`;
+            if (rowCountDisplay) {
+                rowCountDisplay.textContent = truckConfig.rows.length;
+            }
+
+            // Update "Add Row" button text
+            if (addRowBtn) {
+                const nextRow = truckConfig.rows.length > 0 ? truckConfig.rows.length + 1 : 1;
+                addRowBtn.innerHTML = `➕ Add Row ${nextRow}`;
+            }
 
             if (truckConfig.rows.length === 0) {
-                rowList.innerHTML = '<p style="text-align: center; color: #6c757d;">No rows configured. Click "Add Row" to start.</p>';
+                if (emptyMessage) {
+                    emptyMessage.style.display = 'block';
+                }
+                // Remove any row items
+                const existingRows = rowList.querySelectorAll('.row-item');
+                existingRows.forEach(row => row.remove());
                 return;
             }
 
-            rowList.innerHTML = truckConfig.rows.map((row, index) => `
+            // Hide empty message
+            if (emptyMessage) {
+                emptyMessage.style.display = 'none';
+            }
+
+            // Clear and rebuild row list
+            const rowItems = truckConfig.rows.map((row, index) => `
                 <div class="row-item">
                     <span>Row ${row.number} <span class="badge ${row.type}">${row.type.toUpperCase()}</span></span>
                     <div>
@@ -1119,6 +1212,16 @@
                     </div>
                 </div>
             `).join('');
+
+            // Update only the row items, keeping the empty message element
+            const existingRows = rowList.querySelectorAll('.row-item');
+            existingRows.forEach(row => row.remove());
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = rowItems;
+            while (tempDiv.firstChild) {
+                rowList.appendChild(tempDiv.firstChild);
+            }
         }
 
         // ========== SCREEN NAVIGATION ==========
