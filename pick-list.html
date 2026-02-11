@@ -572,8 +572,159 @@
         // Handle form submission
         function handleSubmit(event) {
             event.preventDefault();
-            alert('Pick list generated successfully! This would normally save the data and generate exports.');
+            
+            // Get form data
+            var pickListID = document.getElementById('pickListID').value;
+            var orderDate = document.getElementById('orderDate').value;
+            var customerName = document.getElementById('customerName').value;
+            var poNumber = document.getElementById('poNumber').value;
+            var shipDate = document.getElementById('shipDate').value;
+            var deliveryDate = document.getElementById('deliveryDate').value;
+            
+            // SMART MERGE: Group products by variety|weight|grade|bagsPerPallet FIRST
+            var mergedGroups = {};
+            
+            products.forEach(function(productNum) {
+                var productCard = document.getElementById('product-' + productNum);
+                if (productCard) {
+                    var variety = productCard.querySelector('.product-variety').value;
+                    var weight = productCard.querySelector('.product-weight').value;
+                    var grade = productCard.querySelector('.product-grade').value;
+                    var totalBags = parseInt(productCard.querySelector('.product-total-bags').value) || 0;
+                    var customBagsPerPallet = parseInt(productCard.querySelector('.product-bags-per-pallet').value) || 40;
+                    
+                    if (variety && weight && grade && totalBags > 0) {
+                        // Create unique key for grouping
+                        var groupKey = variety + '|' + weight + '|' + grade + '|' + customBagsPerPallet;
+                        
+                        if (!mergedGroups[groupKey]) {
+                            mergedGroups[groupKey] = {
+                                variety: variety,
+                                weight: weight,
+                                grade: grade,
+                                bagsPerPallet: customBagsPerPallet,
+                                totalBags: 0
+                            };
+                        }
+                        
+                        // Merge bags from matching entries
+                        mergedGroups[groupKey].totalBags += totalBags;
+                    }
+                }
+            });
+            
+            // Generate pallets from MERGED groups
+            var currentPalletCounter = getPalletCounter();
+            var palletIndex = 0;
+            var allPallets = [];
+            var csvData = [];
+            
+            // Add CSV header
+            csvData.push(['Pallet ID', 'Variety', 'Weight (LBS)', 'Grade', 'Bags', 'Total Weight']);
+            
+            // Process each merged group
+            for (var groupKey in mergedGroups) {
+                var group = mergedGroups[groupKey];
+                var numPallets = Math.ceil(group.totalBags / group.bagsPerPallet);
+                var remainingBags = group.totalBags;
+                
+                // Create pallets for this group
+                for (var i = 0; i < numPallets; i++) {
+                    var bagsOnThisPallet = Math.min(group.bagsPerPallet, remainingBags);
+                    var palletID = 'P-' + String(currentPalletCounter + palletIndex).padStart(3, '0');
+                    var palletWeight = bagsOnThisPallet * parseInt(group.weight);
+                    
+                    var palletData = {
+                        palletID: palletID,
+                        pickListID: pickListID,
+                        variety: group.variety,
+                        weight: group.weight,
+                        grade: group.grade,
+                        bags: bagsOnThisPallet,
+                        totalWeight: palletWeight,
+                        customerName: customerName,
+                        poNumber: poNumber,
+                        shipDate: shipDate
+                    };
+                    
+                    allPallets.push(palletData);
+                    csvData.push([palletID, group.variety, group.weight, group.grade, bagsOnThisPallet, palletWeight]);
+                    
+                    remainingBags -= bagsOnThisPallet;
+                    palletIndex++;
+                }
+            }
+            
+            // Update pallet counter
+            setPalletCounter(currentPalletCounter + palletIndex);
+            
+            // Save pick list data
+            var pickListData = {
+                pickListID: pickListID,
+                orderDate: orderDate,
+                customerName: customerName,
+                poNumber: poNumber,
+                shipDate: shipDate,
+                deliveryDate: deliveryDate,
+                totalPallets: allPallets.length,
+                totalBags: parseInt(document.getElementById('totalBags').value),
+                totalWeight: parseInt(document.getElementById('totalWeight').value),
+                pallets: allPallets
+            };
+            
+            // Save to localStorage (would integrate with DataHub if available)
+            try {
+                var pickLists = JSON.parse(localStorage.getItem('pickLists') || '[]');
+                pickLists.push(pickListData);
+                localStorage.setItem('pickLists', JSON.stringify(pickLists));
+                
+                // Save individual pallets
+                var existingPallets = JSON.parse(localStorage.getItem('pallets') || '[]');
+                allPallets.forEach(function(pallet) {
+                    existingPallets.push(pallet);
+                });
+                localStorage.setItem('pallets', JSON.stringify(existingPallets));
+            } catch (error) {
+                console.error('Error saving data:', error);
+            }
+            
+            // Increment pick list counter
+            var currentPickListCounter = getPickListCounter();
+            setPickListCounter(currentPickListCounter + 1);
+            
+            // Generate CSV export
+            generateCSVExport(csvData, pickListID);
+            
+            // Show success message
+            alert('✅ Pick List ' + pickListID + ' generated successfully!\n\n' +
+                  'Total Pallets: ' + allPallets.length + '\n' +
+                  'Total Bags: ' + pickListData.totalBags + '\n' +
+                  'Total Weight: ' + pickListData.totalWeight + ' LBS\n\n' +
+                  'CSV file has been downloaded.');
+            
+            // Reset form for next order
+            resetForm();
+            
             return false;
+        }
+        
+        // Generate CSV export
+        function generateCSVExport(csvData, pickListID) {
+            var csvContent = csvData.map(function(row) {
+                return row.join(',');
+            }).join('\n');
+            
+            var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            var url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'picklist_' + pickListID + '_' + new Date().toISOString().split('T')[0] + '.csv');
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         
         // Initialize on page load
