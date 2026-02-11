@@ -1,3 +1,317 @@
-<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Pallet Packing Label Generator</title>\n    <link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css\">\n    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.0/JsBarcode.all.min.js\"></script>\n    <style>\n        body {\n            font-family: Arial, sans-serif;\n            background: linear-gradient(to right, orange, yellow);\n            padding: 20px;\n            color: #333;\n        }\n        .container {\n            width: 100%;\n            max-width: 600px;\n            margin: 0 auto;\n            padding: 20px;\n            border-radius: 5px;\n            background: rgba(255, 255, 255, 0.9);\n            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);\n        }\n        input, select {\n            width: 100%;\n            padding: 10px;\n            margin: 10px 0;\n            border: 1px solid #ccc;\n            border-radius: 4px;\n        }\n        button {\n            background-color: orange;\n            color: white;\n            padding: 10px;\n            border: none;\n            border-radius: 5px;\n            cursor: pointer;\n        }\n        button:hover {\n            opacity: 0.8;\n        }\n        .label-preview {\n            margin-top: 20px;\n            border: 1px dashed #ccc;\n            padding: 10px;\n            text-align: center;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <h1>Pallet Packing Label Generator</h1>\n        <form id=\"labelForm\">\n            <input type=\"text\" id=\"palletId\" placeholder=\"Pallet ID\" required readonly>\n            <select id=\"variety\">\
-                <option value=\"Red Pontiac\">Red Pontiac</option>\n                <option value=\"Russet Burbank\">Russet Burbank</option>\n                <option value=\"Yukon Gold\">Yukon Gold</option>\n                <option value=\"Red Norland\">Red Norland</option>\n            </select>\n            <select id=\"packWeight\">
-                <option value=\"50 LBS\">50 LBS</option>\n                <option value=\"10 LBS\">10 LBS</option>\n                <option value=\"5 LBS\">5 LBS</option>\n            </select>\n            <input type=\"text\" id=\"grade\" placeholder=\"Grade\" required>\n            <input type=\"number\" id=\"bagCount\" placeholder=\"Bag Count\" required min=\"1\">\n            <input type=\"date\" id=\"packDate\" required>\n            <input type=\"text\" id=\"lotCode\" placeholder=\"Lot Code\" required>\n            <button type=\"button\" id=\"generateLabel\">Generate Label</button>\n        </form>\n        <div class=\"label-preview\">\n            <h2>Label Preview</h2>\n            <svg id=\"barcode\"></svg>\n            <button type=\"button\" id=\"printBtn\">Print</button>\n        </div>\n    </div>\n    <script>\n        // Auto-increment Pallet ID\n        let palletCounter = 1;\n        document.getElementById(\"palletId\").value = palletCounter;\n\n        document.getElementById(\"generateLabel\").onclick = function() {\n            const variety = document.getElementById(\"variety\").value;\n            const packWeight = document.getElementById(\"packWeight\").value;\n            const grade = document.getElementById(\"grade\").value;\n            const bagCount = document.getElementById(\"bagCount\").value;\n            const packDate = document.getElementById(\"packDate\").value;\n            const lotCode = document.getElementById(\"lotCode\").value;\n            const labelData = `Pallet ID: ${palletCounter}\nVariety: ${variety}\nPack Weight: ${packWeight}\nGrade: ${grade}\nBag Count: ${bagCount}\nPack Date: ${packDate}\nLot Code: ${lotCode}`;\n\n            JsBarcode(\"#barcode\", palletCounter.toString(), {\n                format: \"CODE128\",\n                displayValue: true\n            });\n            palletCounter++;\n        };\n\n        document.getElementById(\"printBtn\").onclick = function() {\n            window.print();\n        };\n    </script>\n</body>\n</html>\n
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pallet Packing Label Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.0/JsBarcode.all.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff9800 0%, #ffeb3b 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff9800 0%, #ffeb3b 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #ff9800;
+            box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+        }
+        
+        input[readonly] {
+            background: #f5f5f5;
+            color: #666;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin: 10px 0;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #ff9800 0%, #ffeb3b 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 152, 0, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .label-preview {
+            background: #fff9e6;
+            border: 3px solid #ff9800;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .label-preview h2 {
+            color: #ff9800;
+            margin-bottom: 20px;
+        }
+        
+        #barcode {
+            margin: 20px auto;
+        }
+        
+        .label-details {
+            background: white;
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .label-details p {
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+        
+        .label-details strong {
+            color: #ff9800;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+            .header {
+                background: white;
+                color: black;
+            }
+            .btn, .no-print {
+                display: none !important;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Pallet Packing Label Generator</h1>
+            <p>Schmidt Potato - Internal Packing Labels</p>
+        </div>
+        
+        <div class="content">
+            <form id="labelForm">
+                <div class="form-group">
+                    <label for="palletId">Pallet ID (Auto-Generated)</label>
+                    <input type="text" id="palletId" readonly>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="variety">Variety *</label>
+                        <select id="variety" required>
+                            <option value="Red Pontiac">Red Pontiac</option>
+                            <option value="Russet Burbank">Russet Burbank</option>
+                            <option value="Yukon Gold">Yukon Gold</option>
+                            <option value="Red Norland">Red Norland</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="packWeight">Pack Weight *</label>
+                        <select id="packWeight" required>
+                            <option value="50 LBS">50 LBS</option>
+                            <option value="10 LBS">10 LBS</option>
+                            <option value="5 LBS">5 LBS</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="grade">Grade *</label>
+                        <input type="text" id="grade" placeholder="e.g., Blue Tag Size A" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bagCount">Bag Count *</label>
+                        <input type="number" id="bagCount" min="1" placeholder="e.g., 40" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="packDate">Pack Date *</label>
+                        <input type="date" id="packDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lotCode">Lot Code *</label>
+                        <input type="text" id="lotCode" placeholder="e.g., LOT-2024-001" required>
+                    </div>
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="generateLabel()">🏷️ Generate Label</button>
+            </form>
+            
+            <div class="label-preview" id="labelPreview" style="display: none;">
+                <h2>📋 Label Preview</h2>
+                <svg id="barcode"></svg>
+                <div class="label-details" id="labelDetails"></div>
+                <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print Label</button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">🔄 Generate Another</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let palletCounter = parseInt(localStorage.getItem('palletCounter')) || 1;
+        
+        function init() {
+            updatePalletID();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('packDate').value = today;
+        }
+        
+        function updatePalletID() {
+            document.getElementById('palletId').value = 'P-' + String(palletCounter).padStart(4, '0');
+        }
+        
+        function generateLabel() {
+            const palletId = document.getElementById('palletId').value;
+            const variety = document.getElementById('variety').value;
+            const packWeight = document.getElementById('packWeight').value;
+            const grade = document.getElementById('grade').value.trim();
+            const bagCount = document.getElementById('bagCount').value;
+            const packDate = document.getElementById('packDate').value;
+            const lotCode = document.getElementById('lotCode').value.trim();
+            
+            if (!grade || !bagCount || !packDate || !lotCode) {
+                alert('⚠️ Please fill in all required fields!');
+                return;
+            }
+            
+            try {
+                JsBarcode("#barcode", palletId, {
+                    format: "CODE128",
+                    width: 2,
+                    height: 80,
+                    displayValue: true,
+                    fontSize: 20,
+                    margin: 10
+                });
+            } catch (e) {
+                alert('❌ Error generating barcode: ' + e.message);
+                return;
+            }
+            
+            const labelDetails = `
+                <p><strong>Pallet ID:</strong> ${palletId}</p>
+                <p><strong>Variety:</strong> ${variety}</p>
+                <p><strong>Pack Weight:</strong> ${packWeight}</p>
+                <p><strong>Grade:</strong> ${grade}</p>
+                <p><strong>Bag Count:</strong> ${bagCount} bags</p>
+                <p><strong>Pack Date:</strong> ${packDate}</p>
+                <p><strong>Lot Code:</strong> ${lotCode}</p>
+            `;
+            
+            document.getElementById('labelDetails').innerHTML = labelDetails;
+            document.getElementById('labelPreview').style.display = 'block';
+            
+            palletCounter++;
+            localStorage.setItem('palletCounter', palletCounter);
+            updatePalletID();
+            
+            document.getElementById('labelPreview').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function resetForm() {
+            document.getElementById('labelForm').reset();
+            document.getElementById('labelPreview').style.display = 'none';
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('packDate').value = today;
+            updatePalletID();
+        }
+        
+        init();
+    </script>
+</body>
+</html>
