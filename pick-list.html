@@ -9,12 +9,13 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f46b45 0%, #eea849 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #f46b45 0%, #eea849 100%); color: white; padding: 30px; text-align: center; }
+        .container { max-width: 1000px; max-height: 95vh; overflow-y: auto; margin: 0 auto; background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .header { position: sticky; top: 0; z-index: 10; background: linear-gradient(135deg, #f46b45 0%, #eea849 100%); color: white; padding: 30px; text-align: center; border-radius: 20px 20px 0 0; }
         .header h1 { font-size: 2.5em; margin-bottom: 10px; }
         .content { padding: 40px; }
         .section-title { font-size: 1.5em; color: #f46b45; margin: 30px 0 20px 0; padding-bottom: 10px; border-bottom: 2px solid #f46b45; }
         .form-group { margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px; }
         label { display: block; font-weight: 600; margin-bottom: 8px; color: #333; }
         input, select { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; transition: all 0.3s; }
         input:focus, select:focus { outline: none; border-color: #f46b45; box-shadow: 0 0 0 3px rgba(244, 107, 69, 0.1); }
@@ -24,6 +25,7 @@
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(244, 107, 69, 0.3); }
         .btn-secondary { background: #f5f5f5; color: #333; }
         .btn-success { background: #4CAF50; color: white; }
+        .btn-print { background: #2196F3; color: white; }
         .order-list { margin: 20px 0; }
         .order-item { background: #fff5f2; border: 2px solid #f46b45; border-radius: 12px; padding: 20px; margin-bottom: 15px; }
         .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -33,6 +35,28 @@
         .detail-item { background: white; padding: 10px; border-radius: 6px; }
         .detail-label { font-size: 0.9em; color: #666; margin-bottom: 5px; }
         .detail-value { font-weight: bold; color: #333; }
+        .total-bags-highlight { background: #fff9c4; border: 2px solid #fbc02d; border-radius: 8px; padding: 15px; margin-top: 15px; text-align: center; }
+        .total-bags-highlight .label { font-size: 0.9em; color: #f57f17; font-weight: 600; margin-bottom: 5px; }
+        .total-bags-highlight .value { font-size: 1.8em; font-weight: bold; color: #f57f17; }
+        .merged-info { margin-top: 10px; padding: 10px; background: #e3f2fd; border-radius: 6px; border-left: 4px solid #2196F3; }
+        .merged-info-label { font-size: 0.85em; color: #1976d2; font-weight: 600; margin-bottom: 5px; }
+        .merged-info-value { font-size: 0.9em; color: #333; }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { max-height: none; overflow: visible; box-shadow: none; border-radius: 0; }
+            .header { position: static; border-radius: 0; }
+            .btn, .remove-btn { display: none; }
+            .content { padding: 20px; }
+            .order-item { page-break-inside: avoid; }
+        }
+        @media (max-width: 768px) {
+            .container { max-width: 100%; border-radius: 0; }
+            .header h1 { font-size: 1.8em; }
+            .content { padding: 20px; }
+            .form-row { grid-template-columns: 1fr; }
+            .order-details { grid-template-columns: 1fr; }
+            .btn { width: 100%; margin: 10px 0; }
+        }
     </style>
 </head>
 <body>
@@ -43,35 +67,399 @@
         </div>
         <div class="content">
             <div class="section-title">📝 Pick List Information</div>
-            <div class="form-group"><label>Pick List ID (Auto-Generated)</label><input type="text" id="pickListID" readonly></div>
+            <div class="form-group">
+                <label>Pick List ID (Auto-Generated)</label>
+                <input type="text" id="pickListID" readonly>
+            </div>
+            
             <div class="section-title">➕ Add Customer Order</div>
-            <div class="form-group"><label>Customer Name *</label><input type="text" id="customerName" placeholder="e.g., Sysco Foods"></div>
-            <div class="form-group"><label>Product Variety *</label><select id="variety"><option value="">-- Select Variety --</option><option value="Red Pontiac">Red Pontiac</option><option value="Russet Burbank">Russet Burbank</option><option value="Yukon Gold">Yukon Gold</option><option value="Red Norland">Red Norland</option></select></div>
-            <div class="form-group"><label>Pack Weight *</label><select id="packWeight"><option value="">-- Select Weight --</option><option value="50 LBS">50 LBS</option><option value="10 LBS">10 LBS</option><option value="5 LBS">5 LBS</option></select></div>
-            <div class="form-group"><label>Grade *</label><select id="grade"><option value="">-- Select Grade --</option><option value="Blue Tag Size A">Blue Tag Size A</option><option value="Blue Tag Size B">Blue Tag Size B</option><option value="Red Tag">Red Tag</option></select></div>
-            <div class="form-group"><label>Number of Bags *</label><input type="number" id="bagCount" min="1" placeholder="e.g., 120"></div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Customer Name *</label>
+                    <input type="text" id="customerName" placeholder="e.g., Sysco Foods">
+                </div>
+                <div class="form-group">
+                    <label>Product Variety *</label>
+                    <select id="variety">
+                        <option value="">-- Select Variety --</option>
+                        <option value="Red Pontiac">Red Pontiac</option>
+                        <option value="Russet Burbank">Russet Burbank</option>
+                        <option value="Yukon Gold">Yukon Gold</option>
+                        <option value="Red Norland">Red Norland</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Pack Weight *</label>
+                    <select id="packWeight">
+                        <option value="">-- Select Weight --</option>
+                        <option value="50 LBS">50 LBS</option>
+                        <option value="10 LBS">10 LBS</option>
+                        <option value="5 LBS">5 LBS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Grade *</label>
+                    <select id="grade">
+                        <option value="">-- Select Grade --</option>
+                        <option value="Blue Tag Size A">Blue Tag Size A</option>
+                        <option value="Blue Tag Size B">Blue Tag Size B</option>
+                        <option value="Red Tag">Red Tag</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Number of Bags *</label>
+                    <input type="number" id="bagCount" min="1" placeholder="e.g., 120">
+                </div>
+                <div class="form-group">
+                    <label>Bags Per Pallet</label>
+                    <input type="number" id="bagsPerPallet" value="40" min="1" placeholder="Default: 40">
+                </div>
+            </div>
+            
             <button class="btn btn-success" onclick="addOrder()">➕ Add Order</button>
+            
             <div class="section-title">📦 Customer Orders</div>
             <div id="orderList" class="order-list"></div>
-            <div style="margin-top: 30px;"><button class="btn btn-primary" onclick="generatePickList()">📥 Generate Pick List</button><button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button></div>
+            <div id="mergedProductsSection" style="display: none;">
+                <div class="section-title">🔄 Merged Products Preview</div>
+                <div id="mergedProductsList"></div>
+            </div>
+            
+            <div style="margin-top: 30px;">
+                <button class="btn btn-primary" onclick="generatePickList()">📥 Generate Pick List</button>
+                <button class="btn btn-print" onclick="printPickList()">🖨️ Print Pick List</button>
+                <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'">← Back to Dashboard</button>
+            </div>
         </div>
     </div>
     <script src="data-hub.js"></script>
     <script>
-        let orders = []; let currentPickListID = '';
-        function init() { const counter = DataHub.getPickListCounter(); currentPickListID = 'PL-' + String(counter).padStart(3, '0'); document.getElementById('pickListID').value = currentPickListID; }
-        function addOrder() { const customerName = document.getElementById('customerName').value.trim(); const variety = document.getElementById('variety').value; const packWeight = document.getElementById('packWeight').value; const grade = document.getElementById('grade').value; const bagCount = parseInt(document.getElementById('bagCount').value); if (!customerName || !variety || !packWeight || !grade || !bagCount) { alert('⚠️ Please fill in all fields!'); return; } const order = { id: Date.now(), customerName, variety, packWeight, grade, bagCount }; orders.push(order); displayOrders(); clearForm(); }
-        function displayOrders() { const container = document.getElementById('orderList'); if (orders.length === 0) { container.innerHTML = '<p style="text-align: center; color: #666;">No orders added yet</p>'; return; } let html = ''; orders.forEach((order, index) => { html += `<div class="order-item"><div class="order-header"><div class="order-number">Order ${index + 1}: ${order.customerName}</div><button class="remove-btn" onclick="removeOrder(${order.id})">🗑️ Remove</button></div><div class="order-details"><div class="detail-item"><div class="detail-label">Variety</div><div class="detail-value">${order.variety}</div></div><div class="detail-item"><div class="detail-label">Pack Weight</div><div class="detail-value">${order.packWeight}</div></div><div class="detail-item"><div class="detail-label">Grade</div><div class="detail-value">${order.grade}</div></div><div class="detail-item"><div class="detail-label">Bags</div><div class="detail-value">${order.bagCount}</div></div></div></div>`; }); container.innerHTML = html; }
-        function removeOrder(id) { orders = orders.filter(o => o.id !== id); displayOrders(); }
-        function clearForm() { document.getElementById('customerName').value = ''; document.getElementById('variety').value = ''; document.getElementById('packWeight').value = ''; document.getElementById('grade').value = ''; document.getElementById('bagCount').value = ''; }
-        function generatePickList() { if (orders.length === 0) { alert('⚠️ Please add at least one order!'); return; } const merged = mergeOrders(); const pallets = createPallets(merged); const pickListData = { PickListID: currentPickListID, Date: new Date().toISOString().split('T')[0], TotalOrders: orders.length, TotalPallets: pallets.length, Orders: JSON.stringify(orders), Pallets: JSON.stringify(pallets) }; DataHub.savePickList(pickListData); generateExcelFiles(pallets); DataHub.incrementPickListCounter(); alert('✅ Pick list generated successfully!\n\nPick List: ' + currentPickListID + '\nPallets: ' + pallets.length); window.location.href = 'dashboard.html'; }
-        function mergeOrders() { const merged = {}; orders.forEach(order => { const key = order.variety + '|' + order.packWeight + '|' + order.grade; if (!merged[key]) { merged[key] = { variety: order.variety, packWeight: order.packWeight, grade: order.grade, totalBags: 0, customers: [] }; } merged[key].totalBags += order.bagCount; merged[key].customers.push(order.customerName); }); return Object.values(merged); }
-        function createPallets(merged) { const pallets = []; let palletCounter = DataHub.getPalletCounter(); merged.forEach(product => { const fullPallets = Math.floor(product.totalBags / 40); const remainder = product.totalBags % 40; for (let i = 0; i < fullPallets; i++) { const palletID = 'P-' + String(palletCounter).padStart(3, '0'); pallets.push({ PickListID: currentPickListID, PalletID: palletID, Variety: product.variety, PackWeight: product.packWeight, Grade: product.grade, BagCount: 40, MergedFrom: product.customers.join(', ') }); palletCounter++; } if (remainder > 0) { const palletID = 'P-' + String(palletCounter).padStart(3, '0'); pallets.push({ PickListID: currentPickListID, PalletID: palletID, Variety: product.variety, PackWeight: product.packWeight, Grade: product.grade, BagCount: remainder, MergedFrom: product.customers.join(', ') }); palletCounter++; } }); DataHub.setPalletCounter(palletCounter); return pallets; }
-        function generateExcelFiles(pallets) { const warehouseData = pallets.map(p => ({ 'Pick List ID': p.PickListID, 'Pallet ID': p.PalletID, 'Variety': p.Variety, 'Pack Weight': p.PackWeight, 'Grade': p.Grade, 'Bag Count': p.BagCount, 'Variety Code': getVarietyCode(p.Variety), 'Expected Bag Barcode': generateBagBarcode(p), 'Expected Pallet Barcode': generatePalletBarcode(p), 'Merged From': p.MergedFrom })); const wb1 = XLSX.utils.book_new(); const ws1 = XLSX.utils.json_to_sheet(warehouseData); XLSX.utils.book_append_sheet(wb1, ws1, 'Pick List'); XLSX.writeFile(wb1, 'picklist_' + currentPickListID + '_scanner.csv'); const officeData = pallets.map(p => ({ 'Pick List ID': p.PickListID, 'Pallet ID': p.PalletID, 'Variety': p.Variety, 'Pack Weight': p.PackWeight, 'Grade': p.Grade, 'Bag Count': p.BagCount, 'Merged From': p.MergedFrom })); const wb2 = XLSX.utils.book_new(); const ws2 = XLSX.utils.json_to_sheet(officeData); XLSX.utils.book_append_sheet(wb2, ws2, 'Pick List'); XLSX.writeFile(wb2, 'picklist_' + currentPickListID + '_office.xlsx'); }
-        function getVarietyCode(variety) { const codes = { 'Red Pontiac': 'RP', 'Russet Burbank': 'RB', 'Yukon Gold': 'YG', 'Red Norland': 'RN' }; return codes[variety] || 'XX'; }
-        function generateBagBarcode(pallet) { const code = getVarietyCode(pallet.Variety); const weight = pallet.PackWeight.replace(' LBS', ''); return 'BAG-' + code + '-' + weight + '-' + pallet.Grade.replace(/\\s/g, ''); }
-        function generatePalletBarcode(pallet) { return 'PLT-' + pallet.PalletID; }
-        init(); displayOrders();
+        let orders = [];
+        let currentPickListID = '';
+        
+        function init() {
+            const counter = DataHub.getPickListCounter();
+            currentPickListID = 'PL-' + String(counter).padStart(3, '0');
+            document.getElementById('pickListID').value = currentPickListID;
+        }
+        
+        function addOrder() {
+            const customerName = document.getElementById('customerName').value.trim();
+            const variety = document.getElementById('variety').value;
+            const packWeight = document.getElementById('packWeight').value;
+            const grade = document.getElementById('grade').value;
+            const bagCount = parseInt(document.getElementById('bagCount').value);
+            const bagsPerPallet = parseInt(document.getElementById('bagsPerPallet').value) || 40;
+            
+            if (!customerName || !variety || !packWeight || !grade || !bagCount) {
+                alert('⚠️ Please fill in all required fields!');
+                return;
+            }
+            
+            const order = {
+                id: Date.now(),
+                customerName,
+                variety,
+                packWeight,
+                grade,
+                bagCount,
+                bagsPerPallet
+            };
+            
+            orders.push(order);
+            displayOrders();
+            displayMergedProducts();
+            clearForm();
+        }
+        
+        function displayOrders() {
+            const container = document.getElementById('orderList');
+            if (orders.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666;">No orders added yet</p>';
+                return;
+            }
+            
+            let html = '';
+            orders.forEach((order, index) => {
+                html += `
+                    <div class="order-item">
+                        <div class="order-header">
+                            <div class="order-number">Order ${index + 1}: ${order.customerName}</div>
+                            <button class="remove-btn" onclick="removeOrder(${order.id})">🗑️ Remove</button>
+                        </div>
+                        <div class="order-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Variety</div>
+                                <div class="detail-value">${order.variety}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Pack Weight</div>
+                                <div class="detail-value">${order.packWeight}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Grade</div>
+                                <div class="detail-value">${order.grade}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Bags</div>
+                                <div class="detail-value">${order.bagCount}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Bags Per Pallet</div>
+                                <div class="detail-value">${order.bagsPerPallet}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+        
+        function displayMergedProducts() {
+            const merged = mergeOrders();
+            const container = document.getElementById('mergedProductsList');
+            const section = document.getElementById('mergedProductsSection');
+            
+            if (merged.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            let html = '';
+            
+            merged.forEach((product, index) => {
+                const fullPallets = Math.floor(product.totalBags / product.bagsPerPallet);
+                const remainder = product.totalBags % product.bagsPerPallet;
+                const totalPallets = fullPallets + (remainder > 0 ? 1 : 0);
+                
+                html += `
+                    <div class="order-item">
+                        <div class="order-header">
+                            <div class="order-number">Product ${index + 1}</div>
+                        </div>
+                        <div class="order-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Variety</div>
+                                <div class="detail-value">${product.variety}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Pack Weight</div>
+                                <div class="detail-value">${product.packWeight}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Grade</div>
+                                <div class="detail-value">${product.grade}</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Total Pallets</div>
+                                <div class="detail-value">${totalPallets}</div>
+                            </div>
+                        </div>
+                        <div class="total-bags-highlight">
+                            <div class="label">TOTAL BAGS NEEDED</div>
+                            <div class="value">${product.totalBags} bags</div>
+                        </div>
+                        <div class="merged-info">
+                            <div class="merged-info-label">Merged from customers:</div>
+                            <div class="merged-info-value">${product.customers.join(', ')}</div>
+                        </div>
+                        ${fullPallets > 0 ? `<div class="merged-info" style="border-left-color: #4CAF50; background: #e8f5e9;">
+                            <div class="merged-info-label">Full Pallets:</div>
+                            <div class="merged-info-value">${fullPallets} × ${product.bagsPerPallet} bags</div>
+                        </div>` : ''}
+                        ${remainder > 0 ? `<div class="merged-info" style="border-left-color: #ff9800; background: #fff3e0;">
+                            <div class="merged-info-label">Partial Pallet:</div>
+                            <div class="merged-info-value">${remainder} bags</div>
+                        </div>` : ''}
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        function removeOrder(id) {
+            orders = orders.filter(o => o.id !== id);
+            displayOrders();
+            displayMergedProducts();
+        }
+        
+        function clearForm() {
+            document.getElementById('customerName').value = '';
+            document.getElementById('variety').value = '';
+            document.getElementById('packWeight').value = '';
+            document.getElementById('grade').value = '';
+            document.getElementById('bagCount').value = '';
+            document.getElementById('bagsPerPallet').value = '40';
+        }
+        
+        function mergeOrders() {
+            const merged = {};
+            orders.forEach(order => {
+                const key = `${order.variety}|${order.packWeight}|${order.grade}|${order.bagsPerPallet}`;
+                if (!merged[key]) {
+                    merged[key] = {
+                        variety: order.variety,
+                        packWeight: order.packWeight,
+                        grade: order.grade,
+                        bagsPerPallet: order.bagsPerPallet,
+                        totalBags: 0,
+                        customers: []
+                    };
+                }
+                merged[key].totalBags += order.bagCount;
+                if (!merged[key].customers.includes(order.customerName)) {
+                    merged[key].customers.push(order.customerName);
+                }
+            });
+            return Object.values(merged);
+        }
+        
+        function createPallets(merged) {
+            const pallets = [];
+            let palletCounter = DataHub.getPalletCounter();
+            
+            merged.forEach(product => {
+                const fullPallets = Math.floor(product.totalBags / product.bagsPerPallet);
+                const remainder = product.totalBags % product.bagsPerPallet;
+                
+                for (let i = 0; i < fullPallets; i++) {
+                    const palletID = 'P-' + String(palletCounter).padStart(3, '0');
+                    pallets.push({
+                        PickListID: currentPickListID,
+                        PalletID: palletID,
+                        Variety: product.variety,
+                        PackWeight: product.packWeight,
+                        Grade: product.grade,
+                        BagCount: product.bagsPerPallet,
+                        BagsPerPallet: product.bagsPerPallet,
+                        MergedFrom: product.customers.join(', ')
+                    });
+                    palletCounter++;
+                }
+                
+                if (remainder > 0) {
+                    const palletID = 'P-' + String(palletCounter).padStart(3, '0');
+                    pallets.push({
+                        PickListID: currentPickListID,
+                        PalletID: palletID,
+                        Variety: product.variety,
+                        PackWeight: product.packWeight,
+                        Grade: product.grade,
+                        BagCount: remainder,
+                        BagsPerPallet: product.bagsPerPallet,
+                        MergedFrom: product.customers.join(', ')
+                    });
+                    palletCounter++;
+                }
+            });
+            
+            DataHub.setPalletCounter(palletCounter);
+            return pallets;
+        }
+        
+        function generatePickList() {
+            if (orders.length === 0) {
+                alert('⚠️ Please add at least one order!');
+                return;
+            }
+            
+            const merged = mergeOrders();
+            const pallets = createPallets(merged);
+            
+            const pickListData = {
+                PickListID: currentPickListID,
+                Date: new Date().toISOString().split('T')[0],
+                TotalOrders: orders.length,
+                TotalPallets: pallets.length,
+                Orders: JSON.stringify(orders),
+                Pallets: JSON.stringify(pallets)
+            };
+            
+            DataHub.savePickList(pickListData);
+            generateExcelFiles(pallets);
+            DataHub.incrementPickListCounter();
+            
+            alert(`✅ Pick list generated successfully!\n\nPick List: ${currentPickListID}\nPallets: ${pallets.length}\nMerged Products: ${merged.length}`);
+            window.location.href = 'dashboard.html';
+        }
+        
+        function generateExcelFiles(pallets) {
+            // Scanner CSV
+            const warehouseData = pallets.map(p => ({
+                'Pick List ID': p.PickListID,
+                'Pallet ID': p.PalletID,
+                'Variety': p.Variety,
+                'Pack Weight': p.PackWeight,
+                'Grade': p.Grade,
+                'Bag Count': p.BagCount,
+                'Bags Per Pallet': p.BagsPerPallet,
+                'Variety Code': getVarietyCode(p.Variety),
+                'Expected Bag Barcode': generateBagBarcode(p),
+                'Expected Pallet Barcode': generatePalletBarcode(p),
+                'Merged From': p.MergedFrom
+            }));
+            
+            const wb1 = XLSX.utils.book_new();
+            const ws1 = XLSX.utils.json_to_sheet(warehouseData);
+            XLSX.utils.book_append_sheet(wb1, ws1, 'Pick List');
+            XLSX.writeFile(wb1, `picklist_${currentPickListID}_scanner.csv`);
+            
+            // Office Excel
+            const officeData = pallets.map(p => ({
+                'Pick List ID': p.PickListID,
+                'Pallet ID': p.PalletID,
+                'Variety': p.Variety,
+                'Pack Weight': p.PackWeight,
+                'Grade': p.Grade,
+                'Bag Count': p.BagCount,
+                'Bags Per Pallet': p.BagsPerPallet,
+                'Merged From': p.MergedFrom
+            }));
+            
+            const wb2 = XLSX.utils.book_new();
+            const ws2 = XLSX.utils.json_to_sheet(officeData);
+            XLSX.utils.book_append_sheet(wb2, ws2, 'Pick List');
+            XLSX.writeFile(wb2, `picklist_${currentPickListID}_office.xlsx`);
+        }
+        
+        function getVarietyCode(variety) {
+            const codes = {
+                'Red Pontiac': 'RP',
+                'Russet Burbank': 'RB',
+                'Yukon Gold': 'YG',
+                'Red Norland': 'RN'
+            };
+            return codes[variety] || 'XX';
+        }
+        
+        function generateBagBarcode(pallet) {
+            const code = getVarietyCode(pallet.Variety);
+            const weight = pallet.PackWeight.replace(' LBS', '');
+            return `BAG-${code}-${weight}-${pallet.Grade.replace(/\s/g, '')}`;
+        }
+        
+        function generatePalletBarcode(pallet) {
+            return `PLT-${pallet.PalletID}`;
+        }
+        
+        function printPickList() {
+            if (orders.length === 0) {
+                alert('⚠️ Please add at least one order before printing!');
+                return;
+            }
+            window.print();
+        }
+        
+        init();
+        displayOrders();
     </script>
 </body>
 </html>
