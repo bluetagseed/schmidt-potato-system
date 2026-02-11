@@ -155,7 +155,8 @@
             const packWeight = document.getElementById('packWeight').value;
             const grade = document.getElementById('grade').value;
             const bagCount = parseInt(document.getElementById('bagCount').value);
-            const bagsPerPallet = parseInt(document.getElementById('bagsPerPallet').value) || 40;
+            const bagsPerPalletValue = parseInt(document.getElementById('bagsPerPallet').value);
+            const bagsPerPallet = (bagsPerPalletValue && bagsPerPalletValue > 0) ? bagsPerPalletValue : 40;
             
             if (!customerName || !variety || !packWeight || !grade || !bagCount) {
                 alert('⚠️ Please fill in all required fields!');
