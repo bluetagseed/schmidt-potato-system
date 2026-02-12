@@ -668,9 +668,9 @@
                 <input type="text" id="setupCustomerPO" placeholder="e.g., PO-12345">
             </div>
 
-            <!-- Section 3: Truck & Customer Information -->
+            <!-- Section 3: Truck Information -->
             <div class="section-card">
-                <div class="section-title">Truck &amp; Customer Information</div>
+                <div class="section-title">Truck Information</div>
                 
                 <!-- Truck Selection moved here at the top of the card -->
                 <div class="form-group">
@@ -981,6 +981,12 @@
         let loadedPallets = {};
         let currentPallet = null;
         let currentDateTime = null;
+        
+        // Dirty state tracking
+        let customerDirty = false;
+        let truckDirty = false;
+        let previousCustomerSelection = '';
+        let previousTruckSelection = '';
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
@@ -994,7 +1000,144 @@
                     scanBarcode();
                 }
             });
+            
+            // Track customer form changes
+            const customerNameEl = document.getElementById('customerName');
+            if (customerNameEl) {
+                customerNameEl.addEventListener('input', function() {
+                    customerDirty = true;
+                });
+            }
+            
+            // Track truck form changes
+            const truckNameEl = document.getElementById('truckName');
+            if (truckNameEl) {
+                truckNameEl.addEventListener('input', function() {
+                    truckDirty = true;
+                });
+            }
+            const truckNumberEl = document.getElementById('truckNumber');
+            if (truckNumberEl) {
+                truckNumberEl.addEventListener('input', function() {
+                    truckDirty = true;
+                });
+            }
+            const driverNameEl = document.getElementById('driverName');
+            if (driverNameEl) {
+                driverNameEl.addEventListener('input', function() {
+                    truckDirty = true;
+                });
+            }
+            const driverPhoneEl = document.getElementById('driverPhone');
+            if (driverPhoneEl) {
+                driverPhoneEl.addEventListener('input', function() {
+                    truckDirty = true;
+                });
+            }
         });
+
+        // ========== AUTO-SAVE PROMPT UTILITY ==========
+        function showSavePrompt(message) {
+            return new Promise((resolve) => {
+                // Create modal overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 10000;
+                `;
+                
+                // Create modal content
+                const modal = document.createElement('div');
+                modal.style.cssText = `
+                    background: white;
+                    padding: 30px;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                    max-width: 500px;
+                    text-align: center;
+                `;
+                
+                // Create message paragraph
+                const messagePara = document.createElement('p');
+                messagePara.style.cssText = 'color: #333; font-size: 1.1em; margin-bottom: 25px;';
+                messagePara.textContent = message;
+                
+                // Create button container
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.cssText = 'display: flex; gap: 10px; justify-content: center;';
+                
+                // Create buttons
+                const yesBtn = document.createElement('button');
+                yesBtn.id = 'saveYesBtn';
+                yesBtn.textContent = 'Yes';
+                yesBtn.style.cssText = `
+                    background: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 6px;
+                    font-size: 1em;
+                    cursor: pointer;
+                    font-weight: 600;
+                `;
+                
+                const noBtn = document.createElement('button');
+                noBtn.id = 'saveNoBtn';
+                noBtn.textContent = 'No';
+                noBtn.style.cssText = `
+                    background: #f44336;
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 6px;
+                    font-size: 1em;
+                    cursor: pointer;
+                    font-weight: 600;
+                `;
+                
+                const cancelBtn = document.createElement('button');
+                cancelBtn.id = 'saveCancelBtn';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.style.cssText = `
+                    background: #9e9e9e;
+                    color: white;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 6px;
+                    font-size: 1em;
+                    cursor: pointer;
+                    font-weight: 600;
+                `;
+                
+                buttonContainer.appendChild(yesBtn);
+                buttonContainer.appendChild(noBtn);
+                buttonContainer.appendChild(cancelBtn);
+                
+                modal.appendChild(messagePara);
+                modal.appendChild(buttonContainer);
+                overlay.appendChild(modal);
+                document.body.appendChild(overlay);
+                
+                // Helper function to clean up modal and resolve
+                const cleanup = (value) => {
+                    document.body.removeChild(overlay);
+                    resolve(value);
+                };
+                
+                // Handle button clicks
+                yesBtn.onclick = () => cleanup('yes');
+                noBtn.onclick = () => cleanup('no');
+                cancelBtn.onclick = () => cleanup('cancel');
+            });
+        }
 
         // ========== TRUCK MANAGEMENT ==========
         function loadTrucksList() {
@@ -1009,9 +1152,29 @@
                 select.appendChild(option);
             });
 
-            select.onchange = function() {
-                if (this.value !== '') {
-                    const truck = savedTrucks[this.value];
+            select.onchange = async function() {
+                const newValue = this.value;
+                
+                // Check for unsaved changes
+                if (truckDirty && previousTruckSelection !== '') {
+                    this.disabled = true; // Prevent multiple selections during prompt
+                    const response = await showSavePrompt('You have unsaved changes. Do you want to save them before switching trucks?');
+                    this.disabled = false;
+                    
+                    if (response === 'cancel') {
+                        // Revert to previous selection
+                        this.value = previousTruckSelection;
+                        return;
+                    } else if (response === 'yes') {
+                        // Save current truck
+                        saveTruck();
+                    }
+                    // If 'no', just continue to load new selection
+                }
+                
+                // Load new truck selection
+                if (newValue !== '') {
+                    const truck = savedTrucks[newValue];
                     document.getElementById('truckName').value = truck.name;
                     document.getElementById('truckNumber').value = truck.number;
                     document.getElementById('driverName').value = truck.driverName;
@@ -1019,6 +1182,10 @@
                     truckConfig.rows = truck.rows || [];
                     updateRowDisplay();
                 }
+                
+                // Update tracking
+                previousTruckSelection = newValue;
+                truckDirty = false;
             };
         }
 
@@ -1053,6 +1220,7 @@
 
             localStorage.setItem('savedTrucks', JSON.stringify(savedTrucks));
             loadTrucksList();
+            truckDirty = false;
             alert('Truck saved successfully!');
         }
 
@@ -1084,6 +1252,8 @@
             document.getElementById('truckSelect').value = '';
             truckConfig.rows = [];
             updateRowDisplay();
+            truckDirty = false;
+            previousTruckSelection = '';
         }
 
         // ========== CUSTOMER MANAGEMENT ==========
@@ -1099,11 +1269,35 @@
                 select.appendChild(option);
             });
 
-            select.onchange = function() {
-                if (this.value !== '') {
-                    const customer = savedCustomers[this.value];
+            select.onchange = async function() {
+                const newValue = this.value;
+                
+                // Check for unsaved changes
+                if (customerDirty && previousCustomerSelection !== '') {
+                    this.disabled = true; // Prevent multiple selections during prompt
+                    const response = await showSavePrompt('You have unsaved changes. Do you want to save them before switching customers?');
+                    this.disabled = false;
+                    
+                    if (response === 'cancel') {
+                        // Revert to previous selection
+                        this.value = previousCustomerSelection;
+                        return;
+                    } else if (response === 'yes') {
+                        // Save current customer
+                        saveCustomer();
+                    }
+                    // If 'no', just continue to load new selection
+                }
+                
+                // Load new customer selection
+                if (newValue !== '') {
+                    const customer = savedCustomers[newValue];
                     document.getElementById('customerName').value = customer.name;
                 }
+                
+                // Update tracking
+                previousCustomerSelection = newValue;
+                customerDirty = false;
             };
         }
 
@@ -1128,6 +1322,7 @@
 
             localStorage.setItem('savedCustomers', JSON.stringify(savedCustomers));
             loadCustomersList();
+            customerDirty = false;
             alert('Customer saved successfully!');
         }
 
@@ -1154,6 +1349,8 @@
         function newCustomer() {
             document.getElementById('customerName').value = '';
             document.getElementById('customerSelect').value = '';
+            customerDirty = false;
+            previousCustomerSelection = '';
         }
 
         // ========== ROW CONFIGURATION ==========
