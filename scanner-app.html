@@ -3,51 +3,1008 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Warehouse Scanner</title>
+    <title>Mobile Warehouse Scanner - Schmidt Potato</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="data-hub.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #f46b45 0%, #eea849 100%);
+            color: white;
+            padding: 30px 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px 40px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .section h2 {
+            font-size: 1.5em;
+            color: #1e3c72;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #1e3c72;
+        }
+        
+        .scanner-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        #barcodeInput {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 3px solid #1e3c72;
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        
+        #barcodeInput:focus {
+            border-color: #f46b45;
+            box-shadow: 0 0 10px rgba(244, 107, 69, 0.3);
+        }
+        
+        #barcodeInput.success {
+            animation: successFlash 0.5s;
+        }
+        
+        #barcodeInput.error {
+            animation: errorFlash 0.5s;
+        }
+        
+        @keyframes successFlash {
+            0%, 100% { background-color: white; }
+            50% { background-color: #38ef7d; }
+        }
+        
+        @keyframes errorFlash {
+            0%, 100% { background-color: white; }
+            50% { background-color: #ff6b6b; }
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #1e3c72;
+        }
+        
+        .scan-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .scan-item:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+        
+        .scan-item.duplicate {
+            border-left-color: #ff6b6b;
+            background: #fff5f5;
+        }
+        
+        .scan-item.latest {
+            border-left-color: #38ef7d;
+            background: #f0fff4;
+            animation: slideIn 0.3s;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .scan-info {
+            flex: 1;
+        }
+        
+        .scan-barcode {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 5px;
+        }
+        
+        .scan-timestamp {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .scan-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .badge-duplicate {
+            background: #ff6b6b;
+            color: white;
+        }
+        
+        .badge-new {
+            background: #38ef7d;
+            color: white;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .last-scan-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .last-scan-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .last-scan-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        
+        .scanner-ready {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #38ef7d;
+            animation: pulse 2s infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        #csvUpload {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 2px solid #1e3c72;
+            border-radius: 8px;
+        }
+        
+        .pick-list-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #11998e;
+        }
+        
+        .pick-list-item.completed {
+            background: #f0fff4;
+            border-left-color: #38ef7d;
+            opacity: 0.7;
+        }
+        
+        .pick-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .pick-list-product {
+            font-weight: bold;
+            color: #1e3c72;
+            font-size: 1.1em;
+        }
+        
+        .pick-list-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            background: #11998e;
+            color: white;
+        }
+        
+        .pick-list-status.completed {
+            background: #38ef7d;
+        }
+        
+        .pick-list-details {
+            color: #666;
+            font-size: 0.95em;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .section {
+                padding: 15px;
+            }
+            
+            .status-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .back-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+        }
+    </style>
 </head>
 <body>
-    <h1>Mobile Warehouse Scanner</h1>
-    <section id="scanner">
-        <h2>Eyoyo Scanner Support</h2>
-        <div>
-            <input type="text" id="barcodeInput" placeholder="Scan barcode here" autofocus />
-            <button id="scanButton">Scan</button>
+    <div class="container">
+        <div class="header">
+            <h1>📱 Mobile Warehouse Scanner</h1>
+            <p>Eyoyo NFC Scanner Ready</p>
         </div>
-    </section>
-    <section id="upload">
-        <h2>CSV Upload</h2>
-        <input type="file" id="csvUpload" accept=".csv" />
-        <button id="uploadButton">Upload CSV</button>
-    </section>
-    <section id="realTimeScanning">
-        <h2>Real-Time Barcode Scanning</h2>
-        <div id="scannedList"></div>
-    </section>
-    <section id="pickListTracking">
-        <h2>Pick List Tracking</h2>
-        <div id="pickList"></div>
-    </section>
-    <section id="statisticsDisplay">
-        <h2>Statistics Display</h2>
-        <div id="statistics"></div>
-    </section>
-    <section id="excelExport">
-        <h2>Export to Excel</h2>
-        <button id="exportButton">Export</button>
-    </section>
+        
+        <div class="content">
+            <a href="dashboard.html" class="back-link">← Back to Dashboard</a>
+            
+            <!-- Scanner Input Section -->
+            <section class="section">
+                <h2><span class="scanner-ready"></span>Eyoyo Scanner Input</h2>
+                <div class="scanner-input-container">
+                    <input type="text" id="barcodeInput" placeholder="Scan barcode/NFC tag here..." autofocus />
+                    <button id="scanButton" class="btn btn-primary">Manual Scan</button>
+                </div>
+                
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Scans</div>
+                        <div class="stat-value" id="totalScans">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Duplicates</div>
+                        <div class="stat-value" id="duplicateCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Unique Items</div>
+                        <div class="stat-value" id="uniqueCount">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Scans/Min</div>
+                        <div class="stat-value" id="scanRate">0</div>
+                    </div>
+                </div>
+                
+                <!-- Last Scan Display -->
+                <div id="lastScanDisplay" style="display: none;">
+                    <div class="last-scan-display">
+                        <div class="last-scan-label">Last Scanned</div>
+                        <div class="last-scan-value" id="lastScanValue">-</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- CSV Upload Section -->
+            <section class="section">
+                <h2>📂 CSV Pick List Upload</h2>
+                <div class="upload-area">
+                    <input type="file" id="csvUpload" accept=".csv" />
+                    <button id="uploadButton" class="btn btn-secondary">Upload CSV</button>
+                </div>
+            </section>
+            
+            <!-- Real-Time Scanning Section -->
+            <section class="section">
+                <h2>📋 Real-Time Scan History</h2>
+                <div class="controls">
+                    <button id="clearHistoryButton" class="btn btn-danger">Clear History</button>
+                    <button id="exportScansButton" class="btn btn-secondary">Export Scans to CSV</button>
+                    <button id="exportExcelButton" class="btn btn-primary">Export to Excel</button>
+                </div>
+                <div id="scannedList" style="margin-top: 20px;">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>No scans yet. Start scanning to see items appear here.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Pick List Tracking Section -->
+            <section class="section" id="pickListSection" style="display: none;">
+                <h2>✅ Pick List Tracking</h2>
+                <div id="pickList"></div>
+            </section>
+            
+            <!-- Statistics Section -->
+            <section class="section">
+                <h2>📊 Statistics Display</h2>
+                <div id="statistics"></div>
+            </section>
+        </div>
+    </div>
+    
+    <!-- Audio element for scan beep -->
+    <audio id="scanBeep" preload="auto">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGWS57OmfTBAMUKvo/7tqIAU7k9n1z3kpBSd5y/DdjUELElyz6+ulVRQLR6Dn8r5sIQUsgs/y2Ik2CBlmvO3ooE4QDFKs6P+7ayAFPJXb9tB6KgUped/w3Y5CC05dtevsp1cVDEih6PK/bSEGLIPP8tmJNggZZ73t6aFPEAxTru//vGwgBUCX3vbRfCsFKXri8N6PRw1PX7zu7KlZFg5Louzxv28iBi6E0fPaiTgHGmm+7uqiUBENVbHx/75uHwRAmd/208AsBSl84fHejUYMT2C87u2pWhYPTKTo8sFwIQYvhdLz2ok4Bxprvu7rpFIRDVey8f+/bx4EP5vg9tPBLQYpfuPx340/Ck9gu+7uqVwWD02k6PKkZB8GL4bS89uJOQgabL/v66VTEg5YtPH/wHAfBECc4PfTwS4GKX7k8t+ORwxPYbzv7qpdFxBOpujyw3IgBi+G0/Paizn4Gg==" type="audio/wav">
+    </audio>
+    
     <script>
-        // JavaScript functionality for barcode scanning, CSV upload, etc.
-        document.getElementById('scanButton').addEventListener('click', function() {
-            var barcode = document.getElementById('barcodeInput').value;
-            // Real-time scanning logic...
-        });
-        document.getElementById('uploadButton').addEventListener('click', function() {
-            var file = document.getElementById('csvUpload').files[0];
-            // CSV upload functionality...
-        });
-        document.getElementById('exportButton').addEventListener('click', function() {
-            // Export to Excel functionality...
+        // Scanner App - Complete Implementation
+        
+        class ScannerApp {
+            constructor() {
+                this.scans = [];
+                this.pickList = [];
+                this.scanTimes = [];
+                this.lastScanTime = null;
+                
+                // Load data from localStorage
+                this.loadFromStorage();
+                
+                // Initialize event listeners
+                this.initEventListeners();
+                
+                // Update display
+                this.updateDisplay();
+                
+                // Setup scan rate calculation
+                this.setupScanRateCalculation();
+            }
+            
+            initEventListeners() {
+                const barcodeInput = document.getElementById('barcodeInput');
+                const scanButton = document.getElementById('scanButton');
+                const uploadButton = document.getElementById('uploadButton');
+                const csvUpload = document.getElementById('csvUpload');
+                const clearHistoryButton = document.getElementById('clearHistoryButton');
+                const exportScansButton = document.getElementById('exportScansButton');
+                const exportExcelButton = document.getElementById('exportExcelButton');
+                
+                // Auto-submit on Enter key (Eyoyo scanner sends Enter)
+                barcodeInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.processScan(barcodeInput.value);
+                    }
+                });
+                
+                // Manual scan button
+                scanButton.addEventListener('click', () => {
+                    this.processScan(barcodeInput.value);
+                });
+                
+                // CSV upload
+                uploadButton.addEventListener('click', () => {
+                    const file = csvUpload.files[0];
+                    if (file) {
+                        this.uploadCSV(file);
+                    } else {
+                        alert('Please select a CSV file first.');
+                    }
+                });
+                
+                // Clear history
+                clearHistoryButton.addEventListener('click', () => {
+                    if (confirm('Are you sure you want to clear all scan history?')) {
+                        this.clearHistory();
+                    }
+                });
+                
+                // Export scans to CSV
+                exportScansButton.addEventListener('click', () => {
+                    this.exportToCSV();
+                });
+                
+                // Export to Excel
+                exportExcelButton.addEventListener('click', () => {
+                    this.exportToExcel();
+                });
+                
+                // Maintain autofocus
+                barcodeInput.addEventListener('blur', () => {
+                    setTimeout(() => barcodeInput.focus(), 100);
+                });
+            }
+            
+            processScan(barcode) {
+                const input = document.getElementById('barcodeInput');
+                
+                // Validate input
+                if (!barcode || barcode.trim() === '') {
+                    this.showError(input);
+                    return;
+                }
+                
+                barcode = barcode.trim();
+                
+                // Check for duplicate
+                const isDuplicate = this.scans.some(scan => scan.barcode === barcode);
+                
+                // Create scan record
+                const scan = {
+                    barcode: barcode,
+                    timestamp: new Date().toISOString(),
+                    isDuplicate: isDuplicate
+                };
+                
+                // Add to scans array
+                this.scans.unshift(scan);
+                
+                // Keep only last 50 scans
+                if (this.scans.length > 50) {
+                    this.scans = this.scans.slice(0, 50);
+                }
+                
+                // Track scan time for rate calculation
+                this.scanTimes.push(Date.now());
+                this.lastScanTime = Date.now();
+                
+                // Save to localStorage
+                this.saveToStorage();
+                
+                // Update pick list tracking if applicable
+                this.updatePickListTracking(barcode);
+                
+                // Show success feedback
+                this.showSuccess(input);
+                
+                // Play beep
+                this.playBeep();
+                
+                // Clear input
+                input.value = '';
+                
+                // Update display
+                this.updateDisplay();
+                
+                // Integrate with DataHub
+                this.integrateWithDataHub(scan);
+            }
+            
+            showSuccess(input) {
+                input.classList.remove('error');
+                input.classList.add('success');
+                setTimeout(() => {
+                    input.classList.remove('success');
+                }, 500);
+            }
+            
+            showError(input) {
+                input.classList.remove('success');
+                input.classList.add('error');
+                setTimeout(() => {
+                    input.classList.remove('error');
+                }, 500);
+            }
+            
+            playBeep() {
+                const audio = document.getElementById('scanBeep');
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log('Audio play failed:', e));
+            }
+            
+            updateDisplay() {
+                this.updateStatistics();
+                this.updateScanList();
+                this.updateLastScan();
+                this.updatePickListDisplay();
+                this.updateGeneralStatistics();
+            }
+            
+            updateStatistics() {
+                const totalScans = this.scans.length;
+                const duplicates = this.scans.filter(s => s.isDuplicate).length;
+                const unique = new Set(this.scans.map(s => s.barcode)).size;
+                
+                document.getElementById('totalScans').textContent = totalScans;
+                document.getElementById('duplicateCount').textContent = duplicates;
+                document.getElementById('uniqueCount').textContent = unique;
+            }
+            
+            updateScanList() {
+                const scannedList = document.getElementById('scannedList');
+                
+                if (this.scans.length === 0) {
+                    scannedList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📦</div>
+                            <p>No scans yet. Start scanning to see items appear here.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                scannedList.innerHTML = this.scans.map((scan, index) => {
+                    const date = new Date(scan.timestamp);
+                    const timeStr = date.toLocaleTimeString();
+                    const dateStr = date.toLocaleDateString();
+                    const isLatest = index === 0;
+                    
+                    return `
+                        <div class="scan-item ${scan.isDuplicate ? 'duplicate' : ''} ${isLatest ? 'latest' : ''}">
+                            <div class="scan-info">
+                                <div class="scan-barcode">${this.escapeHtml(scan.barcode)}</div>
+                                <div class="scan-timestamp">${dateStr} ${timeStr}</div>
+                            </div>
+                            <div class="scan-badge ${scan.isDuplicate ? 'badge-duplicate' : 'badge-new'}">
+                                ${scan.isDuplicate ? 'DUPLICATE' : 'NEW'}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            updateLastScan() {
+                const lastScanDisplay = document.getElementById('lastScanDisplay');
+                const lastScanValue = document.getElementById('lastScanValue');
+                
+                if (this.scans.length > 0) {
+                    lastScanDisplay.style.display = 'block';
+                    lastScanValue.textContent = this.scans[0].barcode;
+                } else {
+                    lastScanDisplay.style.display = 'none';
+                }
+            }
+            
+            setupScanRateCalculation() {
+                setInterval(() => {
+                    this.calculateScanRate();
+                }, 5000); // Update every 5 seconds
+            }
+            
+            calculateScanRate() {
+                const now = Date.now();
+                const oneMinuteAgo = now - 60000;
+                
+                // Filter scans from last minute
+                this.scanTimes = this.scanTimes.filter(time => time > oneMinuteAgo);
+                
+                const rate = this.scanTimes.length;
+                document.getElementById('scanRate').textContent = rate;
+            }
+            
+            updatePickListTracking(barcode) {
+                if (this.pickList.length === 0) return;
+                
+                // Find matching item in pick list
+                const item = this.pickList.find(p => 
+                    p.barcode && p.barcode.toLowerCase() === barcode.toLowerCase()
+                );
+                
+                if (item && !item.scanned) {
+                    item.scanned = true;
+                    item.scanTime = new Date().toISOString();
+                    this.saveToStorage();
+                    this.updatePickListDisplay();
+                }
+            }
+            
+            updatePickListDisplay() {
+                const pickListSection = document.getElementById('pickListSection');
+                const pickListDiv = document.getElementById('pickList');
+                
+                if (this.pickList.length === 0) {
+                    pickListSection.style.display = 'none';
+                    return;
+                }
+                
+                pickListSection.style.display = 'block';
+                
+                const totalItems = this.pickList.length;
+                const scannedItems = this.pickList.filter(p => p.scanned).length;
+                const percentComplete = totalItems > 0 ? Math.round((scannedItems / totalItems) * 100) : 0;
+                
+                let html = `
+                    <div style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 2px solid #11998e;">
+                        <strong>Progress:</strong> ${scannedItems} / ${totalItems} items (${percentComplete}%)
+                    </div>
+                `;
+                
+                html += this.pickList.map(item => `
+                    <div class="pick-list-item ${item.scanned ? 'completed' : ''}">
+                        <div class="pick-list-header">
+                            <div class="pick-list-product">${this.escapeHtml(item.product || item.barcode)}</div>
+                            <div class="pick-list-status ${item.scanned ? 'completed' : ''}">
+                                ${item.scanned ? '✓ Scanned' : 'Pending'}
+                            </div>
+                        </div>
+                        <div class="pick-list-details">
+                            ${item.barcode ? 'Barcode: ' + this.escapeHtml(item.barcode) : ''}
+                            ${item.quantity ? ' | Quantity: ' + item.quantity : ''}
+                            ${item.scanned && item.scanTime ? ' | Scanned: ' + new Date(item.scanTime).toLocaleString() : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+                pickListDiv.innerHTML = html;
+            }
+            
+            updateGeneralStatistics() {
+                const stats = DataHub.getStatistics();
+                const statisticsDiv = document.getElementById('statistics');
+                
+                statisticsDiv.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Pallets</div>
+                            <div class="stat-value">${stats.totalPallets}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Pick Lists</div>
+                            <div class="stat-value">${stats.totalPickLists}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Trucks</div>
+                            <div class="stat-value">${stats.totalTrucks}</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Labels</div>
+                            <div class="stat-value">${stats.totalLabels}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            uploadCSV(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const text = e.target.result;
+                        const lines = text.split('\n').filter(line => line.trim());
+                        
+                        if (lines.length === 0) {
+                            alert('CSV file is empty.');
+                            return;
+                        }
+                        
+                        // Parse CSV
+                        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                        const pickList = [];
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            const values = lines[i].split(',').map(v => v.trim());
+                            const item = {};
+                            
+                            headers.forEach((header, index) => {
+                                item[header] = values[index] || '';
+                            });
+                            
+                            pickList.push({
+                                ...item,
+                                scanned: false
+                            });
+                        }
+                        
+                        this.pickList = pickList;
+                        this.saveToStorage();
+                        this.updateDisplay();
+                        
+                        alert(`Successfully loaded ${pickList.length} items from CSV.`);
+                    } catch (error) {
+                        console.error('CSV parse error:', error);
+                        alert('Error parsing CSV file. Please check the format.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+            
+            clearHistory() {
+                this.scans = [];
+                this.scanTimes = [];
+                this.lastScanTime = null;
+                this.saveToStorage();
+                this.updateDisplay();
+            }
+            
+            exportToCSV() {
+                if (this.scans.length === 0) {
+                    alert('No scans to export.');
+                    return;
+                }
+                
+                const headers = ['Barcode', 'Timestamp', 'Date', 'Time', 'Is Duplicate'];
+                const rows = this.scans.map(scan => {
+                    const date = new Date(scan.timestamp);
+                    return [
+                        scan.barcode,
+                        scan.timestamp,
+                        date.toLocaleDateString(),
+                        date.toLocaleTimeString(),
+                        scan.isDuplicate ? 'Yes' : 'No'
+                    ];
+                });
+                
+                const csvContent = [headers, ...rows]
+                    .map(row => row.map(cell => `"${cell}"`).join(','))
+                    .join('\n');
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                
+                link.setAttribute('href', url);
+                link.setAttribute('download', `scanner-data-${timestamp}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            exportToExcel() {
+                if (typeof XLSX === 'undefined') {
+                    alert('Excel export library not loaded. Please refresh the page.');
+                    return;
+                }
+                
+                // Prepare scan data
+                const scanData = this.scans.map(scan => {
+                    const date = new Date(scan.timestamp);
+                    return {
+                        'Barcode': scan.barcode,
+                        'Date': date.toLocaleDateString(),
+                        'Time': date.toLocaleTimeString(),
+                        'Timestamp': scan.timestamp,
+                        'Duplicate': scan.isDuplicate ? 'Yes' : 'No'
+                    };
+                });
+                
+                // Prepare pick list data
+                const pickListData = this.pickList.map(item => ({
+                    'Product': item.product || '',
+                    'Barcode': item.barcode || '',
+                    'Quantity': item.quantity || '',
+                    'Status': item.scanned ? 'Scanned' : 'Pending',
+                    'Scan Time': item.scanTime ? new Date(item.scanTime).toLocaleString() : ''
+                }));
+                
+                // Create workbook
+                const wb = XLSX.utils.book_new();
+                
+                // Add scan history sheet
+                if (scanData.length > 0) {
+                    const ws1 = XLSX.utils.json_to_sheet(scanData);
+                    XLSX.utils.book_append_sheet(wb, ws1, 'Scan History');
+                }
+                
+                // Add pick list sheet
+                if (pickListData.length > 0) {
+                    const ws2 = XLSX.utils.json_to_sheet(pickListData);
+                    XLSX.utils.book_append_sheet(wb, ws2, 'Pick List');
+                }
+                
+                // Add statistics sheet
+                const stats = DataHub.getStatistics();
+                const statsData = [
+                    { 'Metric': 'Total Scans', 'Value': this.scans.length },
+                    { 'Metric': 'Unique Items', 'Value': new Set(this.scans.map(s => s.barcode)).size },
+                    { 'Metric': 'Duplicates', 'Value': this.scans.filter(s => s.isDuplicate).length },
+                    { 'Metric': 'Pick List Items', 'Value': this.pickList.length },
+                    { 'Metric': 'Scanned Items', 'Value': this.pickList.filter(p => p.scanned).length },
+                    { 'Metric': 'Total Pallets', 'Value': stats.totalPallets },
+                    { 'Metric': 'Total Pick Lists', 'Value': stats.totalPickLists },
+                    { 'Metric': 'Export Date', 'Value': new Date().toLocaleString() }
+                ];
+                const ws3 = XLSX.utils.json_to_sheet(statsData);
+                XLSX.utils.book_append_sheet(wb, ws3, 'Statistics');
+                
+                // Generate filename with timestamp
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                const filename = `Scanner-Data-${timestamp}.xlsx`;
+                
+                // Save file
+                XLSX.writeFile(wb, filename);
+            }
+            
+            integrateWithDataHub(scan) {
+                // Save scan to DataHub as a label entry
+                DataHub.saveLabel({
+                    type: 'scan',
+                    barcode: scan.barcode,
+                    timestamp: scan.timestamp,
+                    isDuplicate: scan.isDuplicate
+                });
+                
+                // Update DataHub timestamp
+                DataHub.updateTimestamp();
+            }
+            
+            saveToStorage() {
+                localStorage.setItem('scannerApp_scans', JSON.stringify(this.scans));
+                localStorage.setItem('scannerApp_pickList', JSON.stringify(this.pickList));
+                localStorage.setItem('scannerApp_scanTimes', JSON.stringify(this.scanTimes));
+            }
+            
+            loadFromStorage() {
+                try {
+                    const scansData = localStorage.getItem('scannerApp_scans');
+                    if (scansData) {
+                        this.scans = JSON.parse(scansData);
+                    }
+                    
+                    const pickListData = localStorage.getItem('scannerApp_pickList');
+                    if (pickListData) {
+                        this.pickList = JSON.parse(pickListData);
+                    }
+                    
+                    const scanTimesData = localStorage.getItem('scannerApp_scanTimes');
+                    if (scanTimesData) {
+                        this.scanTimes = JSON.parse(scanTimesData);
+                        // Filter out old times
+                        const oneMinuteAgo = Date.now() - 60000;
+                        this.scanTimes = this.scanTimes.filter(time => time > oneMinuteAgo);
+                    }
+                } catch (error) {
+                    console.error('Error loading from storage:', error);
+                }
+            }
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+        
+        // Initialize the scanner app
+        let scannerApp;
+        document.addEventListener('DOMContentLoaded', () => {
+            scannerApp = new ScannerApp();
         });
     </script>
 </body>
