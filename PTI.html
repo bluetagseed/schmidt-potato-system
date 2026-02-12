@@ -227,6 +227,39 @@
                 font-size: 1.5em;
             }
         }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        /* Modal styling */
+        #varietyModal button:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        #varietyModal input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -248,20 +281,15 @@
                 <label for="variety">
                     🥔 Potato Variety (Commodity) <span class="badge badge-smart">SMART</span>
                 </label>
-                <select id="variety" name="variety" required>
-                    <option value="">Select Variety</option>
-                    <option value="Red Pontiac">Red Pontiac</option>
-                    <option value="Russet Burbank">Russet Burbank</option>
-                    <option value="Yukon Gold">Yukon Gold</option>
-                    <option value="Red Norland">Red Norland</option>
-                    <option value="Kennebec">Kennebec</option>
-                    <option value="Katahdin">Katahdin</option>
-                    <option value="Chieftain">Chieftain</option>
-                    <option value="Superior">Superior</option>
-                    <option value="Shepody">Shepody</option>
-                    <option value="Ranger Russet">Ranger Russet</option>
-                    <option value="Russet Norkotah">Russet Norkotah</option>
-                </select>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input list="variety-options" id="variety" name="variety" required style="flex: 1;">
+                    <button type="button" id="manageVarietiesBtn" style="padding: 12px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                        ⚙️ Manage Varieties
+                    </button>
+                </div>
+                <datalist id="variety-options">
+                    <!-- Varieties will be dynamically populated -->
+                </datalist>
             </div>
 
             <div class="form-group">
@@ -373,12 +401,204 @@
         ✅ Label generated successfully! Trigger file downloaded.
     </div>
 
+    <!-- Variety Management Modal -->
+    <div id="varietyModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 style="margin: 0; color: #2c3e50;">🥔 Manage Potato Varieties</h2>
+                <button id="closeModal" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #95a5a6;">&times;</button>
+            </div>
+
+            <!-- Add New Variety Form -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; border-radius: 12px; margin-bottom: 30px;">
+                <h3 style="margin-top: 0; color: white;">➕ Add New Variety</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <input type="text" id="newVarietyName" placeholder="Variety Name (e.g., Red Pontiac)" style="padding: 12px; border: none; border-radius: 8px; font-size: 14px;">
+                    <input type="text" id="newVarietyPLU" placeholder="PLU Code" style="padding: 12px; border: none; border-radius: 8px; font-size: 14px;">
+                    <input type="text" id="newVarietyUPC" placeholder="UPC Code" style="padding: 12px; border: none; border-radius: 8px; font-size: 14px;">
+                </div>
+                <button id="addVarietyBtn" style="width: 100%; padding: 12px; background: white; color: #667eea; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 16px;">
+                    ✅ Add Variety
+                </button>
+            </div>
+
+            <!-- Existing Varieties List -->
+            <div>
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">📋 Existing Varieties</h3>
+                <div id="varietiesList" style="display: grid; gap: 15px;">
+                    <!-- Varieties will be dynamically populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Configuration object to store learned PLU/UPC codes and other settings
         let config = {
             varieties: {},
             nextBatchNumber: 1
         };
+
+        // Initialize default varieties in localStorage
+        function initializeVarieties() {
+            const defaultVarieties = [
+                { name: 'Red Pontiac', plu: '', upc: '' },
+                { name: 'Kennebec', plu: '', upc: '' },
+                { name: 'Yukon Gold', plu: '', upc: '' },
+                { name: 'Russet Burbank', plu: '', upc: '' },
+                { name: 'Norland', plu: '', upc: '' },
+                { name: 'Chieftain', plu: '', upc: '' },
+                { name: 'Superior', plu: '', upc: '' },
+                { name: 'Katahdin', plu: '', upc: '' },
+                { name: 'Red Norland', plu: '', upc: '' },
+                { name: 'Dark Red Norland', plu: '', upc: '' },
+                { name: 'Red LaSoda', plu: '', upc: '' }
+            ];
+
+            let config = JSON.parse(localStorage.getItem('potatoLabelConfig') || '{}');
+            
+            // If varieties don't exist, initialize with defaults
+            if (!config.varietiesDB) {
+                config.varietiesDB = defaultVarieties;
+                localStorage.setItem('potatoLabelConfig', JSON.stringify(config));
+            }
+            
+            return config.varietiesDB || defaultVarieties;
+        }
+
+        // Load varieties into dropdown
+        function loadVarietiesIntoDropdown() {
+            const varieties = initializeVarieties();
+            const datalist = document.getElementById('variety-options');
+            
+            datalist.innerHTML = '';
+            varieties.forEach(v => {
+                const option = document.createElement('option');
+                option.value = v.name;
+                datalist.appendChild(option);
+            });
+        }
+
+        // Render varieties list in modal
+        function renderVarietiesList() {
+            const varieties = initializeVarieties();
+            const listContainer = document.getElementById('varietiesList');
+            
+            listContainer.innerHTML = '';
+            
+            varieties.forEach((variety, index) => {
+                const varietyCard = document.createElement('div');
+                varietyCard.style.cssText = 'background: #f8f9fa; padding: 20px; border-radius: 12px; border: 2px solid #e0e0e0;';
+                
+                varietyCard.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: center;">
+                        <div>
+                            <input type="text" value="${variety.name}" id="varietyName_${index}" 
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-weight: 600;">
+                        </div>
+                        <div>
+                            <input type="text" value="${variety.plu || ''}" id="varietyPLU_${index}" placeholder="PLU"
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div>
+                            <input type="text" value="${variety.upc || ''}" id="varietyUPC_${index}" placeholder="UPC"
+                                   style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="saveVariety(${index})" style="padding: 10px 15px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                💾 Save
+                            </button>
+                            <button onclick="deleteVariety(${index})" style="padding: 10px 15px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                listContainer.appendChild(varietyCard);
+            });
+        }
+
+        // Save variety changes
+        function saveVariety(index) {
+            let config = JSON.parse(localStorage.getItem('potatoLabelConfig') || '{}');
+            
+            const name = document.getElementById(`varietyName_${index}`).value.trim();
+            const plu = document.getElementById(`varietyPLU_${index}`).value.trim();
+            const upc = document.getElementById(`varietyUPC_${index}`).value.trim();
+            
+            if (!name) {
+                alert('Variety name cannot be empty');
+                return;
+            }
+            
+            // Update variety in database
+            config.varietiesDB[index] = { name, plu, upc };
+            
+            // Update variety mapping
+            if (!config.varieties) config.varieties = {};
+            config.varieties[name] = { plu: plu || '', upc: upc || '' };
+            
+            localStorage.setItem('potatoLabelConfig', JSON.stringify(config));
+            
+            loadVarietiesIntoDropdown();
+            showSuccessMessage('✅ Variety updated successfully!');
+        }
+
+        // Delete variety
+        function deleteVariety(index) {
+            if (!confirm('Are you sure you want to delete this variety?')) {
+                return;
+            }
+            
+            let config = JSON.parse(localStorage.getItem('potatoLabelConfig') || '{}');
+            
+            const varietyName = config.varietiesDB[index].name;
+            
+            // Remove from database
+            config.varietiesDB.splice(index, 1);
+            
+            // Remove from mapping
+            if (config.varieties && config.varieties[varietyName]) {
+                delete config.varieties[varietyName];
+            }
+            
+            localStorage.setItem('potatoLabelConfig', JSON.stringify(config));
+            
+            loadVarietiesIntoDropdown();
+            renderVarietiesList();
+            showSuccessMessage('🗑️ Variety deleted successfully!');
+        }
+
+        // Show success message with custom text
+        function showSuccessMessage(message) {
+            const existingMsg = document.getElementById('varietySuccessMsg');
+            if (existingMsg) existingMsg.remove();
+            
+            const msg = document.createElement('div');
+            msg.id = 'varietySuccessMsg';
+            msg.textContent = message;
+            msg.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                font-weight: 600;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(msg);
+            
+            setTimeout(() => {
+                msg.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => msg.remove(), 300);
+            }, 3000);
+        }
 
         // Load configuration from localStorage
         function loadConfig() {
@@ -404,10 +624,80 @@
             // Set batch/lot number
             const batchNum = `LOT-${String(config.nextBatchNumber).padStart(5, '0')}`;
             document.getElementById('batchNumber').value = batchNum;
+
+            // Load varieties into dropdown
+            loadVarietiesIntoDropdown();
         }
 
+        // Modal event handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Open modal
+            document.getElementById('manageVarietiesBtn').addEventListener('click', function() {
+                const modal = document.getElementById('varietyModal');
+                modal.style.display = 'flex';
+                renderVarietiesList();
+            });
+
+            // Close modal
+            document.getElementById('closeModal').addEventListener('click', function() {
+                document.getElementById('varietyModal').style.display = 'none';
+            });
+
+            // Close modal when clicking outside
+            document.getElementById('varietyModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+
+            // Add new variety
+            document.getElementById('addVarietyBtn').addEventListener('click', function() {
+                const name = document.getElementById('newVarietyName').value.trim();
+                const plu = document.getElementById('newVarietyPLU').value.trim();
+                const upc = document.getElementById('newVarietyUPC').value.trim();
+                
+                if (!name) {
+                    alert('Please enter a variety name');
+                    return;
+                }
+                
+                let config = JSON.parse(localStorage.getItem('potatoLabelConfig') || '{}');
+                if (!config.varietiesDB) config.varietiesDB = [];
+                
+                // Check if variety already exists
+                const exists = config.varietiesDB.some(v => v.name.toLowerCase() === name.toLowerCase());
+                if (exists) {
+                    alert('This variety already exists!');
+                    return;
+                }
+                
+                // Add new variety
+                config.varietiesDB.push({ name, plu, upc });
+                
+                // Also add to varieties mapping if PLU/UPC provided
+                if (!config.varieties) config.varieties = {};
+                if (plu || upc) {
+                    config.varieties[name] = { plu: plu || '', upc: upc || '' };
+                }
+                
+                localStorage.setItem('potatoLabelConfig', JSON.stringify(config));
+                
+                // Clear form
+                document.getElementById('newVarietyName').value = '';
+                document.getElementById('newVarietyPLU').value = '';
+                document.getElementById('newVarietyUPC').value = '';
+                
+                // Refresh displays
+                loadVarietiesIntoDropdown();
+                renderVarietiesList();
+                
+                // Show success message
+                showSuccessMessage('✅ Variety added successfully!');
+            });
+        });
+
         // Handle variety selection change
-        document.getElementById('variety').addEventListener('change', function() {
+        document.getElementById('variety').addEventListener('input', function() {
             const variety = this.value;
             const pluInput = document.getElementById('pluCode');
             const upcInput = document.getElementById('upcCode');
@@ -738,7 +1028,10 @@
         });
 
         // Initialize on page load
-        window.addEventListener('DOMContentLoaded', initializeForm);
+        window.addEventListener('DOMContentLoaded', function() {
+            initializeVarieties();
+            initializeForm();
+        });
     </script>
 </body>
 </html>
