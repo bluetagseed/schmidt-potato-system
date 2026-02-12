@@ -662,6 +662,12 @@
                 <input type="text" id="customerName" placeholder="e.g., ABC Company">
             </div>
 
+            <!-- Customer PO Number field -->
+            <div class="form-group">
+                <label>Customer PO Number</label>
+                <input type="text" id="setupCustomerPO" placeholder="e.g., PO-12345">
+            </div>
+
             <!-- Section 3: Truck & Customer Information -->
             <div class="section-card">
                 <div class="section-title">Truck &amp; Customer Information</div>
@@ -1312,6 +1318,15 @@
             buildTruckGrid();
             updateStats();
 
+            // Transfer PO number from setup to loading screen
+            const setupPO = document.getElementById('setupCustomerPO').value.trim();
+            document.getElementById('customerPO').value = setupPO;
+            
+            // If PO exists, generate barcode immediately
+            if (setupPO) {
+                generatePOBarcode();
+            }
+
             showScreen('loadingScreen');
             
             // Focus on scan input
@@ -1414,6 +1429,7 @@
                 showScreen('setupScreen');
                 loadedPallets = {};
                 currentPallet = null;
+                document.getElementById('setupCustomerPO').value = '';
                 document.getElementById('customerPO').value = '';
                 document.getElementById('scanInput').value = '';
                 document.getElementById('scanResult').style.display = 'none';
