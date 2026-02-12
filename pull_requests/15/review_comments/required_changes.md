@@ -7,10 +7,17 @@
 
 ### Add/Update Features
 4. ✅ **Auto-populate Lot Code from PTI label system** - Integration with existing PTI.html system
-5. ✅ **Fix packing calculation**: 
-   - **5 bags per layer** (fixed)
-   - **8 layers high** (fixed)
-   - = **40 bags total per pallet** for 50lb bags
+5. ✅ **Fix packing calculation with bags per pallet based on weight**:
+   - **3 LBS** = **600 bags per pallet** (1800 lbs total)
+   - **4 LBS** = **500 bags per pallet** (2000 lbs total)
+   - **5 LBS** = **400 bags per pallet** (2000 lbs total)
+   - **10 LBS** = **200 bags per pallet** (2000 lbs total)
+   - **25 LBS** = **80 bags per pallet** (2000 lbs total)
+   - **50 LBS** = **40 bags per pallet** (2000 lbs total) - 5 bags per layer × 8 layers
+   - **5/10 = 50 LBS** = **40 bags per pallet** (2000 lbs total)
+   - **10/5 = 50 LBS** = **40 bags per pallet** (2000 lbs total)
+   - **100 LBS** = **20 bags per pallet** (2000 lbs total)
+   - **Bulk Pack** = TBD
 6. ✅ **Update Pack Weight dropdown** to match pick-list.html options:
    - 3 LBS
    - 4 LBS
@@ -27,4 +34,5 @@
 ### Keep Standard Pallet Size
 - Pallet size remains **40×48"** (not 42×48")
 
-Let me know if you need any clarification on these requirements!
+### Target Weight
+- Most pallets target **2000 lbs total weight** (except 3 LBS bags = 1800 lbs)
