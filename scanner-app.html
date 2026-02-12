@@ -3,51 +3,579 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Warehouse Scanner</title>
-    <script src="data-hub.js"></script>
+    <title>📱 Mobile Warehouse Scanner - Schmidt Potato System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+        
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 3px solid #27ae60;
+            padding-bottom: 10px;
+        }
+        
+        /* Scanner Input Section */
+        .scanner-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        #barcodeInput {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.2em;
+            border: 3px solid #667eea;
+            border-radius: 8px;
+            outline: none;
+        }
+        
+        #barcodeInput:focus {
+            border-color: #27ae60;
+            box-shadow: 0 0 10px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-scan {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        .btn-scan:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-scan:active {
+            transform: scale(0.95);
+        }
+        
+        .scan-feedback {
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            display: none;
+            margin-top: 10px;
+        }
+        
+        .scan-feedback.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        .scan-feedback.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Statistics Dashboard */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        /* Scanned Items Table */
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        
+        tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        tbody tr:hover {
+            background: #e9ecef;
+        }
+        
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        
+        .btn-delete:hover {
+            background: #c0392b;
+        }
+        
+        /* CSV Upload Section */
+        .upload-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary, .btn-secondary, .btn-danger {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover, .btn-secondary:hover, .btn-danger:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn-primary:active, .btn-secondary:active, .btn-danger:active {
+            transform: scale(0.95);
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .scanner-input-group {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn-primary, .btn-secondary, .btn-danger {
+                width: 100%;
+            }
+            
+            table {
+                font-size: 0.9em;
+            }
+            
+            th, td {
+                padding: 8px 5px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Mobile Warehouse Scanner</h1>
-    <section id="scanner">
-        <h2>Eyoyo Scanner Support</h2>
-        <div>
-            <input type="text" id="barcodeInput" placeholder="Scan barcode here" autofocus />
-            <button id="scanButton">Scan</button>
+    <div class="container">
+        <h1>📱 Mobile Warehouse Scanner</h1>
+        
+        <!-- Scanner Input Section -->
+        <div class="card">
+            <h2>🔍 Barcode Scanner</h2>
+            <div class="scanner-input-group">
+                <input type="text" id="barcodeInput" placeholder="Scan or type barcode..." autofocus>
+                <button id="scanBtn" class="btn-scan">📷 Scan</button>
+            </div>
+            <div id="scanFeedback" class="scan-feedback"></div>
         </div>
-    </section>
-    <section id="upload">
-        <h2>CSV Upload</h2>
-        <input type="file" id="csvUpload" accept=".csv" />
-        <button id="uploadButton">Upload CSV</button>
-    </section>
-    <section id="realTimeScanning">
-        <h2>Real-Time Barcode Scanning</h2>
-        <div id="scannedList"></div>
-    </section>
-    <section id="pickListTracking">
-        <h2>Pick List Tracking</h2>
-        <div id="pickList"></div>
-    </section>
-    <section id="statisticsDisplay">
-        <h2>Statistics Display</h2>
-        <div id="statistics"></div>
-    </section>
-    <section id="excelExport">
-        <h2>Export to Excel</h2>
-        <button id="exportButton">Export</button>
-    </section>
+        
+        <!-- Live Statistics Dashboard -->
+        <div class="card">
+            <h2>📊 Live Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="totalScans">0</div>
+                    <div class="stat-label">Total Scans</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="uniqueItems">0</div>
+                    <div class="stat-label">Unique Items</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="lastScanTime">--:--</div>
+                    <div class="stat-label">Last Scan</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Scanned Items Table -->
+        <div class="card">
+            <h2>📋 Scanned Items</h2>
+            <div class="table-container">
+                <table id="scannedItemsTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Barcode</th>
+                            <th>Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scannedItemsBody">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999;">No items scanned yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- CSV Upload Section -->
+        <div class="card">
+            <h2>📤 CSV Upload</h2>
+            <div class="upload-group">
+                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+                <button onclick="document.getElementById('csvFileInput').click()" class="btn-secondary">
+                    📁 Choose CSV File
+                </button>
+                <span id="fileName" style="color: #666;">No file chosen</span>
+                <button id="uploadCsvBtn" class="btn-secondary">
+                    ⬆️ Upload
+                </button>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="card">
+            <h2>⚙️ Actions</h2>
+            <div class="action-buttons">
+                <button id="exportBtn" class="btn-primary">
+                    📊 Export to Excel
+                </button>
+                <button id="clearBtn" class="btn-danger">
+                    🗑️ Clear All Data
+                </button>
+                <button onclick="window.location.href='index.html'" class="btn-secondary">
+                    🏠 Back to Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <script>
-        // JavaScript functionality for barcode scanning, CSV upload, etc.
-        document.getElementById('scanButton').addEventListener('click', function() {
-            var barcode = document.getElementById('barcodeInput').value;
-            // Real-time scanning logic...
+        // Scanned items array
+        let scannedItems = [];
+        
+        // Load from localStorage on page load
+        function loadScannedItems() {
+            const saved = localStorage.getItem('scannedItems');
+            if (saved) {
+                scannedItems = JSON.parse(saved);
+                updateDisplay();
+            }
+        }
+        
+        // Save to localStorage
+        function saveScannedItems() {
+            localStorage.setItem('scannedItems', JSON.stringify(scannedItems));
+        }
+        
+        // Handle barcode scan
+        function handleScan() {
+            const barcode = document.getElementById('barcodeInput').value.trim();
+            if (!barcode) {
+                showFeedback('⚠️ Please enter a barcode', 'error');
+                return;
+            }
+            
+            // Add to scanned items
+            const item = {
+                id: scannedItems.length + 1,
+                barcode: barcode,
+                timestamp: new Date().toISOString(),
+                time: new Date().toLocaleTimeString()
+            };
+            
+            scannedItems.unshift(item); // Add to beginning
+            saveScannedItems();
+            updateDisplay();
+            
+            // Play success sound
+            playBeep();
+            
+            // Show success feedback
+            showFeedback(`✅ Scanned: ${barcode}`, 'success');
+            
+            // Clear input and refocus
+            document.getElementById('barcodeInput').value = '';
+            document.getElementById('barcodeInput').focus();
+        }
+        
+        // Show feedback message
+        function showFeedback(message, type) {
+            const feedback = document.getElementById('scanFeedback');
+            feedback.textContent = message;
+            feedback.className = `scan-feedback ${type}`;
+            
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Play beep sound
+        function playBeep() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+        
+        // Update display
+        function updateDisplay() {
+            // Update statistics
+            document.getElementById('totalScans').textContent = scannedItems.length;
+            const uniqueBarcodes = new Set(scannedItems.map(item => item.barcode));
+            document.getElementById('uniqueItems').textContent = uniqueBarcodes.size;
+            
+            if (scannedItems.length > 0) {
+                document.getElementById('lastScanTime').textContent = scannedItems[0].time;
+            }
+            
+            // Update table
+            const tbody = document.getElementById('scannedItemsBody');
+            if (scannedItems.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">No items scanned yet</td></tr>';
+            } else {
+                tbody.innerHTML = scannedItems.map((item, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td><strong>${item.barcode}</strong></td>
+                        <td>${item.time}</td>
+                        <td><button class="btn-delete" onclick="deleteItem(${index})">Delete</button></td>
+                    </tr>
+                `).join('');
+            }
+        }
+        
+        // Delete item
+        function deleteItem(index) {
+            if (confirm('Delete this scan?')) {
+                scannedItems.splice(index, 1);
+                saveScannedItems();
+                updateDisplay();
+            }
+        }
+        
+        // Export to CSV
+        function exportToCSV() {
+            if (scannedItems.length === 0) {
+                alert('No data to export');
+                return;
+            }
+            
+            const csvContent = 'ID,Barcode,Timestamp\n' + 
+                scannedItems.map(item => `${item.id},"${item.barcode}","${item.timestamp}"`).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `warehouse_scan_${new Date().toISOString().slice(0,10)}.csv`;
+            a.click();
+        }
+        
+        // Clear all data
+        function clearAllData() {
+            if (confirm('Clear all scanned items? This cannot be undone.')) {
+                scannedItems = [];
+                localStorage.removeItem('scannedItems');
+                updateDisplay();
+                showFeedback('✅ All data cleared', 'success');
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('scanBtn').addEventListener('click', handleScan);
+        document.getElementById('barcodeInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleScan();
+            }
         });
-        document.getElementById('uploadButton').addEventListener('click', function() {
-            var file = document.getElementById('csvUpload').files[0];
-            // CSV upload functionality...
+        document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+        document.getElementById('clearBtn').addEventListener('click', clearAllData);
+        
+        // CSV file upload
+        document.getElementById('csvFileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('fileName').textContent = file.name;
+            }
         });
-        document.getElementById('exportButton').addEventListener('click', function() {
-            // Export to Excel functionality...
+        
+        document.getElementById('uploadCsvBtn').addEventListener('click', () => {
+            const file = document.getElementById('csvFileInput').files[0];
+            if (!file) {
+                alert('Please choose a CSV file first');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const lines = text.split('\n').slice(1); // Skip header
+                
+                let imported = 0;
+                lines.forEach(line => {
+                    const parts = line.split(',');
+                    if (parts.length >= 2) {
+                        const barcode = parts[1].replace(/"/g, '').trim();
+                        if (barcode) {
+                            const item = {
+                                id: scannedItems.length + 1,
+                                barcode: barcode,
+                                timestamp: new Date().toISOString(),
+                                time: new Date().toLocaleTimeString()
+                            };
+                            scannedItems.unshift(item);
+                            imported++;
+                        }
+                    }
+                });
+                
+                saveScannedItems();
+                updateDisplay();
+                showFeedback(`✅ Imported ${imported} items`, 'success');
+                document.getElementById('csvFileInput').value = '';
+                document.getElementById('fileName').textContent = 'No file chosen';
+            };
+            reader.readAsText(file);
+        });
+        
+        // Load data on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            loadScannedItems();
+            document.getElementById('barcodeInput').focus();
         });
     </script>
 </body>
