@@ -272,15 +272,18 @@
             const weight = document.getElementById('packWeight').value;
             const bagCountField = document.getElementById('bagCount');
             
+            // Bag counts per pallet based on pack weight
+            // Note: 3 LBS targets 1800 lbs (pallet weight constraint), others target 2000 lbs
+            // Note: All 50 LBS options (50, 5/10=50, 10/5=50) intentionally use same value
             const bagCounts = {
-                '3': 600,    // 1800 lbs total
+                '3': 600,    // 1800 lbs total (pallet weight limit)
                 '4': 500,    // 2000 lbs total
                 '5': 400,    // 2000 lbs total
                 '10': 200,   // 2000 lbs total
                 '25': 80,    // 2000 lbs total
                 '50': 40,    // 2000 lbs total (5 bags/layer × 8 layers)
                 '100': 20,   // 2000 lbs total
-                'bulk': 0    // TBD
+                'bulk': 0    // TBD - awaiting specification
             };
             
             bagCountField.value = bagCounts[weight] || 0;
