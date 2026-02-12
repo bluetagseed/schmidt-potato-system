@@ -635,7 +635,7 @@
             playBeep() {
                 const audio = document.getElementById('scanBeep');
                 audio.currentTime = 0;
-                audio.play().catch(e => console.log('Audio play failed:', e));
+                audio.play().catch(e => console.log('Audio playback failed (user interaction may be required):', e));
             }
             
             updateDisplay() {
@@ -734,6 +734,13 @@
                 }
             }
             
+            calculatePickListProgress() {
+                const totalItems = this.pickList.length;
+                const scannedItems = this.pickList.filter(p => p.scanned).length;
+                const percentComplete = totalItems > 0 ? Math.round((scannedItems / totalItems) * 100) : 0;
+                return { totalItems, scannedItems, percentComplete };
+            }
+            
             updatePickListDisplay() {
                 const pickListSection = document.getElementById('pickListSection');
                 const pickListDiv = document.getElementById('pickList');
@@ -745,9 +752,7 @@
                 
                 pickListSection.style.display = 'block';
                 
-                const totalItems = this.pickList.length;
-                const scannedItems = this.pickList.filter(p => p.scanned).length;
-                const percentComplete = totalItems > 0 ? Math.round((scannedItems / totalItems) * 100) : 0;
+                const { totalItems, scannedItems, percentComplete } = this.calculatePickListProgress();
                 
                 let html = `
                     <div style="margin-bottom: 20px; padding: 15px; background: white; border-radius: 8px; border: 2px solid #11998e;">
@@ -800,6 +805,42 @@
                 `;
             }
             
+            parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    const nextChar = line[i + 1];
+                    
+                    if (char === '"') {
+                        if (inQuotes && nextChar === '"') {
+                            // Escaped quote
+                            current += '"';
+                            i++; // Skip next quote
+                        } else {
+                            // Toggle quote state
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        // End of field
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                
+                // Add last field
+                result.push(current.trim());
+                return result;
+            }
+            
+            getExportTimestamp() {
+                return new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            }
+            
             uploadCSV(file) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -812,12 +853,12 @@
                             return;
                         }
                         
-                        // Parse CSV
-                        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                        // Parse CSV with proper handling of quoted fields
+                        const headers = this.parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim().toLowerCase());
                         const pickList = [];
                         
                         for (let i = 1; i < lines.length; i++) {
-                            const values = lines[i].split(',').map(v => v.trim());
+                            const values = this.parseCSVLine(lines[i]).map(v => v.replace(/^"|"$/g, '').trim());
                             const item = {};
                             
                             headers.forEach((header, index) => {
@@ -876,7 +917,7 @@
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement('a');
                 const url = URL.createObjectURL(blob);
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const timestamp = this.getExportTimestamp();
                 
                 link.setAttribute('href', url);
                 link.setAttribute('download', `scanner-data-${timestamp}.csv`);
@@ -944,7 +985,7 @@
                 XLSX.utils.book_append_sheet(wb, ws3, 'Statistics');
                 
                 // Generate filename with timestamp
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+                const timestamp = this.getExportTimestamp();
                 const filename = `Scanner-Data-${timestamp}.xlsx`;
                 
                 // Save file
