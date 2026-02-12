@@ -385,7 +385,7 @@
             const config = JSON.parse(localStorage.getItem('potatoLabelConfig') || '{}');
             const variety = config.varietiesDB?.find(v => v.name === varietyName);
             
-            if (variety && variety.plu) {
+            if (variety && variety.plu && variety.plu.length >= 2) {
                 return variety.plu.substring(0, 2).toUpperCase();
             }
             
@@ -549,6 +549,15 @@
         });
 
         // CSV Functions
+        function escapeCSV(value) {
+            if (value == null) return '""';
+            const str = String(value);
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return '"' + str.replace(/"/g, '""') + '"';
+            }
+            return '"' + str + '"';
+        }
+
         function downloadFile(filename, content) {
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
@@ -562,18 +571,18 @@
         function logShippingToCSV(data) {
             const timestamp = new Date().toISOString();
             const csvRow = [
-                timestamp,
-                data.palletID,
-                data.customerName,
-                data.poNumber,
-                data.variety,
-                data.packWeight,
-                data.bagCount,
-                data.totalWeight,
-                data.shipDate,
-                data.sscc,
-                data.truckNumber,
-                data.bolNumber
+                escapeCSV(timestamp),
+                escapeCSV(data.palletID),
+                escapeCSV(data.customerName),
+                escapeCSV(data.poNumber),
+                escapeCSV(data.variety),
+                escapeCSV(data.packWeight),
+                escapeCSV(data.bagCount),
+                escapeCSV(data.totalWeight),
+                escapeCSV(data.shipDate),
+                escapeCSV(data.sscc),
+                escapeCSV(data.truckNumber),
+                escapeCSV(data.bolNumber)
             ].join(',');
             
             const csvContent = 'Timestamp,Pallet ID,Customer,PO Number,Variety,Pack Weight,Bag Count,Total Weight,Ship Date,SSCC,Truck Number,BOL Number\n' + csvRow;
@@ -592,18 +601,18 @@
             
             const timestamp = new Date().toISOString();
             const csvRow = [
-                timestamp,
-                data.palletID,
-                data.customerName,
-                data.poNumber,
-                data.variety,
-                data.packWeight,
-                data.bagCount,
-                data.totalWeight,
-                data.shipDate,
-                data.sscc,
-                data.truckNumber,
-                data.bolNumber
+                escapeCSV(timestamp),
+                escapeCSV(data.palletID),
+                escapeCSV(data.customerName),
+                escapeCSV(data.poNumber),
+                escapeCSV(data.variety),
+                escapeCSV(data.packWeight),
+                escapeCSV(data.bagCount),
+                escapeCSV(data.totalWeight),
+                escapeCSV(data.shipDate),
+                escapeCSV(data.sscc),
+                escapeCSV(data.truckNumber),
+                escapeCSV(data.bolNumber)
             ].join(',');
             
             csvLog += csvRow + '\n';
@@ -666,9 +675,11 @@
             const shipDate = document.getElementById('shipDate').value;
             const packDate = document.getElementById('packDate').value;
             
-            // Format dates
-            const formattedShipDate = new Date(shipDate).toLocaleDateString('en-US');
-            const formattedPackDate = new Date(packDate).toLocaleDateString('en-US');
+            // Format dates (add timezone offset to handle date-only strings correctly)
+            const shipDateObj = new Date(shipDate + 'T00:00:00');
+            const packDateObj = new Date(packDate + 'T00:00:00');
+            const formattedShipDate = shipDateObj.toLocaleDateString('en-US');
+            const formattedPackDate = packDateObj.toLocaleDateString('en-US');
             
             // Get variety code
             const varietyCode = getVarietyCode(variety);
