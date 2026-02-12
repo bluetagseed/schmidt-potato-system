@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pallet Packing Label Generator</title>
+    <title>Pallet Packing Label Generator - Enhanced</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.0/JsBarcode.all.min.js"></script>
+    <script src="data-hub.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,7 +21,7 @@
         }
         
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -43,6 +44,18 @@
         
         .content {
             padding: 40px;
+        }
+        
+        .form-section {
+            margin-bottom: 30px;
+        }
+        
+        .form-section h3 {
+            color: #ff9800;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #ff9800;
+            padding-bottom: 5px;
         }
         
         .form-group {
@@ -71,6 +84,10 @@
             box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
         }
         
+        input:invalid {
+            border-color: #f44336;
+        }
+        
         input[readonly] {
             background: #f5f5f5;
             color: #666;
@@ -80,6 +97,45 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+        }
+        
+        .error-message {
+            color: #f44336;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .error-message.active {
+            display: block;
+        }
+        
+        .warning-message {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #856404;
+            display: none;
+        }
+        
+        .warning-message.active {
+            display: block;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #155724;
+            display: none;
+        }
+        
+        .success-message.active {
+            display: block;
         }
         
         .btn {
@@ -92,6 +148,12 @@
             transition: all 0.3s;
             width: 100%;
             margin: 10px 0;
+            min-height: 48px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         
         .btn-primary {
@@ -99,7 +161,7 @@
             color: white;
         }
         
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(255, 152, 0, 0.3);
         }
@@ -109,6 +171,167 @@
             color: #333;
         }
         
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        /* Pallet Visualization */
+        .pallet-visualization {
+            background: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .pallet-visualization.active {
+            display: block;
+        }
+        
+        .pallet-canvas-container {
+            position: relative;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 8px;
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        
+        .pallet-canvas {
+            width: 100%;
+            display: block;
+            cursor: move;
+            touch-action: none;
+        }
+        
+        .pallet-item {
+            position: absolute;
+            background: #4CAF50;
+            border: 2px solid #2E7D32;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.8em;
+            text-align: center;
+            padding: 5px;
+            cursor: grab;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        
+        .pallet-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+        
+        .pallet-item.dragging {
+            opacity: 0.5;
+            z-index: 1000;
+        }
+        
+        .pallet-item.variety-red {
+            background: #e91e63;
+            border-color: #c2185b;
+        }
+        
+        .pallet-item.variety-russet {
+            background: #8d6e63;
+            border-color: #6d4c41;
+        }
+        
+        .pallet-item.variety-yukon {
+            background: #fbc02d;
+            border-color: #f9a825;
+            color: #333;
+        }
+        
+        .pallet-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .pallet-stat {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .pallet-stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .pallet-stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ff9800;
+        }
+        
+        .pallet-stat-value.warning {
+            color: #f44336;
+        }
+        
+        .pallet-stat-value.success {
+            color: #4CAF50;
+        }
+        
+        .center-of-gravity {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #f44336;
+            border: 3px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .pallet-size-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .size-option {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .size-option:hover {
+            border-color: #ff9800;
+        }
+        
+        .size-option.active {
+            background: #ff9800;
+            color: white;
+            border-color: #ff9800;
+        }
+        
+        .size-option-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .size-option-dims {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
         .label-preview {
             background: #fff9e6;
             border: 3px solid #ff9800;
@@ -116,6 +339,11 @@
             padding: 30px;
             margin-top: 30px;
             text-align: center;
+            display: none;
+        }
+        
+        .label-preview.active {
+            display: block;
         }
         
         .label-preview h2 {
@@ -145,6 +373,97 @@
             color: #ff9800;
         }
         
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #ff9800;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .pallet-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .size-option {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+        }
+        
+        /* Touch targets for mobile */
+        @media (hover: none) and (pointer: coarse) {
+            .btn {
+                min-height: 48px;
+                padding: 15px;
+            }
+            
+            input, select {
+                min-height: 48px;
+            }
+            
+            .pallet-item {
+                min-width: 44px;
+                min-height: 44px;
+            }
+        }
+        
+        /* Landscape mobile/tablet */
+        @media (max-width: 1024px) and (orientation: landscape) {
+            .container {
+                max-width: 100%;
+            }
+            
+            .pallet-canvas-container {
+                max-width: 500px;
+            }
+        }
+        
         @media print {
             body {
                 background: white;
@@ -158,159 +477,748 @@
                 background: white;
                 color: black;
             }
-            .btn, .no-print {
+            .btn, .no-print, .pallet-visualization {
                 display: none !important;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .form-row {
-                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
     <div class="container">
         <div class="header">
             <h1>📦 Pallet Packing Label Generator</h1>
-            <p>Schmidt Potato - Internal Packing Labels</p>
+            <p>Schmidt Potato - Smart Packing & Label System</p>
         </div>
         
         <div class="content">
             <form id="labelForm">
-                <div class="form-group">
-                    <label for="palletId">Pallet ID (Auto-Generated)</label>
-                    <input type="text" id="palletId" readonly>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="variety">Variety *</label>
-                        <select id="variety" required>
-                            <option value="Red Pontiac">Red Pontiac</option>
-                            <option value="Russet Burbank">Russet Burbank</option>
-                            <option value="Yukon Gold">Yukon Gold</option>
-                            <option value="Red Norland">Red Norland</option>
-                        </select>
-                    </div>
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <h3>📋 Basic Information</h3>
                     
                     <div class="form-group">
-                        <label for="packWeight">Pack Weight *</label>
-                        <select id="packWeight" required>
-                            <option value="50 LBS">50 LBS</option>
-                            <option value="10 LBS">10 LBS</option>
-                            <option value="5 LBS">5 LBS</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="grade">Grade *</label>
-                        <input type="text" id="grade" placeholder="e.g., Blue Tag Size A" required>
+                        <label for="palletId">Pallet ID (Auto-Generated)</label>
+                        <input type="text" id="palletId" readonly>
+                        <div class="error-message" id="palletIdError">Duplicate pallet ID detected!</div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="bagCount">Bag Count *</label>
-                        <input type="number" id="bagCount" min="1" placeholder="e.g., 40" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="packDate">Pack Date *</label>
-                        <input type="date" id="packDate" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="variety">Variety *</label>
+                            <select id="variety" required>
+                                <option value="Red Pontiac">Red Pontiac</option>
+                                <option value="Russet Burbank">Russet Burbank</option>
+                                <option value="Yukon Gold">Yukon Gold</option>
+                                <option value="Red Norland">Red Norland</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="packWeight">Pack Weight *</label>
+                            <select id="packWeight" required>
+                                <option value="50">50 LBS</option>
+                                <option value="10">10 LBS</option>
+                                <option value="5">5 LBS</option>
+                            </select>
+                        </div>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="lotCode">Lot Code *</label>
-                        <input type="text" id="lotCode" placeholder="e.g., LOT-2024-001" required>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="grade">Grade *</label>
+                            <input type="text" id="grade" placeholder="e.g., Blue Tag Size A" required>
+                            <div class="error-message" id="gradeError">Grade is required</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="bagCount">Bag Count *</label>
+                            <input type="number" id="bagCount" min="1" max="100" placeholder="e.g., 40" required>
+                            <div class="error-message" id="bagCountError">Bag count must be between 1 and 100</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="packDate">Pack Date *</label>
+                            <input type="date" id="packDate" required>
+                            <div class="error-message" id="packDateError">Pack date is required</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="lotCode">Lot Code *</label>
+                            <input type="text" id="lotCode" placeholder="e.g., LOT-2024-001" required>
+                            <div class="error-message" id="lotCodeError">Lot code is required</div>
+                        </div>
                     </div>
                 </div>
                 
-                <button type="button" class="btn btn-primary" onclick="generateLabel()">🏷️ Generate Label</button>
+                <!-- Pallet Configuration -->
+                <div class="form-section">
+                    <h3>📐 Pallet Configuration</h3>
+                    
+                    <div class="pallet-size-selector">
+                        <div class="size-option active" data-size="40x48" onclick="selectPalletSize('40x48')">
+                            <div class="size-option-label">Standard</div>
+                            <div class="size-option-dims">40" × 48"</div>
+                        </div>
+                        <div class="size-option" data-size="48x48" onclick="selectPalletSize('48x48')">
+                            <div class="size-option-label">Square</div>
+                            <div class="size-option-dims">48" × 48"</div>
+                        </div>
+                        <div class="size-option" data-size="custom" onclick="selectPalletSize('custom')">
+                            <div class="size-option-label">Custom</div>
+                            <div class="size-option-dims">Specify</div>
+                        </div>
+                    </div>
+                    
+                    <div id="customSizeInputs" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="customWidth">Width (inches) *</label>
+                                <input type="number" id="customWidth" min="20" max="60" placeholder="e.g., 40">
+                            </div>
+                            <div class="form-group">
+                                <label for="customLength">Length (inches) *</label>
+                                <input type="number" id="customLength" min="20" max="60" placeholder="e.g., 48">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="warning-message" id="weightWarning"></div>
+                <div class="success-message" id="successMessage"></div>
+                
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" onclick="optimizePacking()">🧮 Optimize Packing</button>
+                    <button type="button" class="btn btn-primary" onclick="generateLabel()">🏷️ Generate Label</button>
+                </div>
             </form>
             
-            <div class="label-preview" id="labelPreview" style="display: none;">
+            <!-- Pallet Visualization -->
+            <div class="pallet-visualization" id="palletVisualization">
+                <h3>🎯 Pallet Layout Visualization</h3>
+                <p style="color: #666; margin-bottom: 15px;">Drag items to arrange them on the pallet</p>
+                
+                <div class="pallet-canvas-container" id="palletCanvasContainer">
+                    <canvas id="palletCanvas" class="pallet-canvas" width="600" height="800"></canvas>
+                    <div class="center-of-gravity" id="centerOfGravity"></div>
+                </div>
+                
+                <div class="pallet-stats">
+                    <div class="pallet-stat">
+                        <div class="pallet-stat-label">Total Weight</div>
+                        <div class="pallet-stat-value" id="statTotalWeight">0 lbs</div>
+                    </div>
+                    <div class="pallet-stat">
+                        <div class="pallet-stat-label">Utilization</div>
+                        <div class="pallet-stat-value success" id="statUtilization">0%</div>
+                    </div>
+                    <div class="pallet-stat">
+                        <div class="pallet-stat-label">Items</div>
+                        <div class="pallet-stat-value" id="statItems">0</div>
+                    </div>
+                    <div class="pallet-stat">
+                        <div class="pallet-stat-label">Configuration</div>
+                        <div class="pallet-stat-value" id="statConfig">Single</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Label Preview -->
+            <div class="label-preview" id="labelPreview">
                 <h2>📋 Label Preview</h2>
                 <svg id="barcode"></svg>
                 <div class="label-details" id="labelDetails"></div>
-                <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print Label</button>
-                <button type="button" class="btn btn-secondary" onclick="resetForm()">🔄 Generate Another</button>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print Label</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">🔄 Generate Another</button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let palletCounter = parseInt(localStorage.getItem('palletCounter')) || 1;
+        // State management
+        let palletCounter = DataHub.getPalletCounter();
+        let currentPalletSize = { width: 40, length: 48 };
+        let palletItems = [];
+        let draggedItem = null;
+        let touchOffset = { x: 0, y: 0 };
         
+        // Constants
+        const MAX_WEIGHT = 2000; // lbs
+        const WEIGHT_WARNING_THRESHOLD = 1800; // lbs
+        
+        // Initialize
         function init() {
             updatePalletID();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('packDate').value = today;
+            setupDragAndDrop();
         }
         
         function updatePalletID() {
-            document.getElementById('palletId').value = 'P-' + String(palletCounter).padStart(4, '0');
+            const palletId = 'P-' + String(palletCounter).padStart(4, '0');
+            document.getElementById('palletId').value = palletId;
+            checkDuplicatePalletId(palletId);
+        }
+        
+        function checkDuplicatePalletId(palletId) {
+            const existingPallet = DataHub.getPalletById(palletId);
+            const errorElement = document.getElementById('palletIdError');
+            if (existingPallet) {
+                errorElement.classList.add('active');
+                return true;
+            } else {
+                errorElement.classList.remove('active');
+                return false;
+            }
+        }
+        
+        function selectPalletSize(size) {
+            // Update UI
+            document.querySelectorAll('.size-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            document.querySelector(`[data-size="${size}"]`).classList.add('active');
+            
+            // Update size
+            if (size === 'custom') {
+                document.getElementById('customSizeInputs').style.display = 'block';
+            } else {
+                document.getElementById('customSizeInputs').style.display = 'none';
+                if (size === '40x48') {
+                    currentPalletSize = { width: 40, length: 48 };
+                } else if (size === '48x48') {
+                    currentPalletSize = { width: 48, length: 48 };
+                }
+            }
+            
+            // Redraw canvas if visualization is active
+            if (document.getElementById('palletVisualization').classList.contains('active')) {
+                drawPalletLayout();
+            }
+        }
+        
+        function validateInputs() {
+            const errors = [];
+            
+            const grade = document.getElementById('grade').value.trim();
+            if (!grade) {
+                document.getElementById('gradeError').classList.add('active');
+                errors.push('Grade is required');
+            } else {
+                document.getElementById('gradeError').classList.remove('active');
+            }
+            
+            const bagCount = parseInt(document.getElementById('bagCount').value);
+            if (!bagCount || bagCount < 1 || bagCount > 100) {
+                document.getElementById('bagCountError').classList.add('active');
+                errors.push('Bag count must be between 1 and 100');
+            } else {
+                document.getElementById('bagCountError').classList.remove('active');
+            }
+            
+            const packDate = document.getElementById('packDate').value;
+            if (!packDate) {
+                document.getElementById('packDateError').classList.add('active');
+                errors.push('Pack date is required');
+            } else {
+                document.getElementById('packDateError').classList.remove('active');
+            }
+            
+            const lotCode = document.getElementById('lotCode').value.trim();
+            if (!lotCode) {
+                document.getElementById('lotCodeError').classList.add('active');
+                errors.push('Lot code is required');
+            } else {
+                document.getElementById('lotCodeError').classList.remove('active');
+            }
+            
+            // Check custom pallet size if selected
+            if (document.querySelector('[data-size="custom"]').classList.contains('active')) {
+                const customWidth = parseInt(document.getElementById('customWidth').value);
+                const customLength = parseInt(document.getElementById('customLength').value);
+                if (!customWidth || !customLength || customWidth < 20 || customLength < 20) {
+                    errors.push('Custom pallet dimensions must be at least 20 inches');
+                } else {
+                    currentPalletSize = { width: customWidth, length: customLength };
+                }
+            }
+            
+            return errors.length === 0;
+        }
+        
+        function optimizePacking() {
+            if (!validateInputs()) {
+                showWarning('Please fix the errors before optimizing packing.');
+                return;
+            }
+            
+            showLoading();
+            
+            setTimeout(() => {
+                const packWeight = parseInt(document.getElementById('packWeight').value);
+                const bagCount = parseInt(document.getElementById('bagCount').value);
+                const variety = document.getElementById('variety').value;
+                
+                const result = calculateOptimalPacking(bagCount, packWeight, variety);
+                
+                // Show results
+                document.getElementById('palletVisualization').classList.add('active');
+                updatePalletStats(result);
+                drawPalletLayout();
+                
+                hideLoading();
+                showSuccess(result.message);
+                
+                // Scroll to visualization
+                document.getElementById('palletVisualization').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+        
+        function calculateOptimalPacking(bagCount, weightPerBag, variety) {
+            const totalWeight = bagCount * weightPerBag;
+            const palletArea = currentPalletSize.width * currentPalletSize.length;
+            
+            // Estimate bag dimensions (assuming standard bag sizes)
+            let bagWidth, bagLength;
+            if (weightPerBag === 50) {
+                bagWidth = 18; bagLength = 28;
+            } else if (weightPerBag === 10) {
+                bagWidth = 14; bagLength = 20;
+            } else {
+                bagWidth = 10; bagLength = 14;
+            }
+            
+            // Calculate how many bags fit per layer
+            const bagsPerRow = Math.floor(currentPalletSize.width / bagWidth);
+            const bagsPerColumn = Math.floor(currentPalletSize.length / bagLength);
+            const bagsPerLayer = bagsPerRow * bagsPerColumn;
+            
+            // Calculate layers needed
+            const layers = Math.ceil(bagCount / bagsPerLayer);
+            
+            // Generate items for visualization
+            palletItems = [];
+            for (let i = 0; i < bagCount; i++) {
+                const layer = Math.floor(i / bagsPerLayer);
+                const posInLayer = i % bagsPerLayer;
+                const row = Math.floor(posInLayer / bagsPerRow);
+                const col = posInLayer % bagsPerRow;
+                
+                palletItems.push({
+                    id: i,
+                    x: col * bagWidth + 1,
+                    y: row * bagLength + 1,
+                    width: bagWidth - 2,
+                    length: bagLength - 2,
+                    weight: weightPerBag,
+                    variety: variety,
+                    layer: layer
+                });
+            }
+            
+            // Calculate utilization
+            const usedArea = bagCount * bagWidth * bagLength;
+            const utilization = Math.min(100, (usedArea / (palletArea * layers)) * 100);
+            
+            // Determine configuration
+            let configuration = 'Single';
+            if (layers > 1) {
+                configuration = `${layers} Layers`;
+            }
+            
+            // Generate message
+            let message = `Optimal packing: ${bagCount} bags in ${configuration}. `;
+            message += `Total weight: ${totalWeight} lbs (${utilization.toFixed(1)}% utilization).`;
+            
+            if (totalWeight > MAX_WEIGHT) {
+                message = '⚠️ Weight exceeds maximum! Split into multiple pallets.';
+            } else if (totalWeight > WEIGHT_WARNING_THRESHOLD) {
+                message = '⚠️ ' + message + ' Approaching weight limit!';
+            }
+            
+            return {
+                totalWeight,
+                utilization,
+                configuration,
+                message,
+                layers
+            };
+        }
+        
+        function drawPalletLayout() {
+            const canvas = document.getElementById('palletCanvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.getElementById('palletCanvasContainer');
+            
+            // Set canvas size based on container
+            const maxWidth = container.offsetWidth - 6; // Account for border
+            const aspectRatio = currentPalletSize.length / currentPalletSize.width;
+            canvas.width = maxWidth;
+            canvas.height = maxWidth * aspectRatio;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw pallet outline
+            ctx.fillStyle = '#d2691e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw pallet surface
+            ctx.fillStyle = '#f5deb3';
+            const padding = 10;
+            ctx.fillRect(padding, padding, canvas.width - 2*padding, canvas.height - 2*padding);
+            
+            // Draw grid
+            ctx.strokeStyle = '#d2b48c';
+            ctx.lineWidth = 1;
+            const gridSize = 50;
+            for (let x = padding; x < canvas.width - padding; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, canvas.height - padding);
+                ctx.stroke();
+            }
+            for (let y = padding; y < canvas.height - padding; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(canvas.width - padding, y);
+                ctx.stroke();
+            }
+            
+            // Scale items to canvas
+            const scaleX = (canvas.width - 2*padding) / currentPalletSize.width;
+            const scaleY = (canvas.height - 2*padding) / currentPalletSize.length;
+            
+            // Draw items
+            palletItems.forEach((item, index) => {
+                const x = padding + item.x * scaleX;
+                const y = padding + item.y * scaleY;
+                const w = item.width * scaleX;
+                const h = item.length * scaleY;
+                
+                // Color based on variety
+                let color = '#4CAF50';
+                if (item.variety.includes('Red')) {
+                    color = '#e91e63';
+                } else if (item.variety.includes('Russet')) {
+                    color = '#8d6e63';
+                } else if (item.variety.includes('Yukon')) {
+                    color = '#fbc02d';
+                }
+                
+                // Draw item
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, w, h);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, w, h);
+                
+                // Draw label
+                ctx.fillStyle = item.variety.includes('Yukon') ? '#333' : 'white';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${item.weight}lb`, x + w/2, y + h/2);
+            });
+            
+            // Calculate and draw center of gravity
+            if (palletItems.length > 0) {
+                let totalWeight = 0;
+                let weightedX = 0;
+                let weightedY = 0;
+                
+                palletItems.forEach(item => {
+                    const itemCenterX = item.x + item.width / 2;
+                    const itemCenterY = item.y + item.length / 2;
+                    weightedX += itemCenterX * item.weight;
+                    weightedY += itemCenterY * item.weight;
+                    totalWeight += item.weight;
+                });
+                
+                const cogX = padding + (weightedX / totalWeight) * scaleX;
+                const cogY = padding + (weightedY / totalWeight) * scaleY;
+                
+                // Update COG indicator position
+                const cogElement = document.getElementById('centerOfGravity');
+                cogElement.style.left = cogX + 'px';
+                cogElement.style.top = cogY + 'px';
+                cogElement.style.display = 'block';
+            }
+        }
+        
+        function updatePalletStats(result) {
+            document.getElementById('statTotalWeight').textContent = result.totalWeight + ' lbs';
+            document.getElementById('statTotalWeight').className = 'pallet-stat-value';
+            if (result.totalWeight > WEIGHT_WARNING_THRESHOLD) {
+                document.getElementById('statTotalWeight').classList.add('warning');
+            }
+            
+            document.getElementById('statUtilization').textContent = result.utilization.toFixed(1) + '%';
+            document.getElementById('statItems').textContent = palletItems.length;
+            document.getElementById('statConfig').textContent = result.configuration;
+        }
+        
+        function setupDragAndDrop() {
+            const canvas = document.getElementById('palletCanvas');
+            
+            // Mouse events
+            canvas.addEventListener('mousedown', handleDragStart);
+            canvas.addEventListener('mousemove', handleDragMove);
+            canvas.addEventListener('mouseup', handleDragEnd);
+            
+            // Touch events
+            canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+            canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+            canvas.addEventListener('touchend', handleTouchEnd);
+        }
+        
+        function handleDragStart(e) {
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Find item at position
+            const item = findItemAt(x, y);
+            if (item) {
+                draggedItem = item;
+                touchOffset.x = x - item.screenX;
+                touchOffset.y = y - item.screenY;
+            }
+        }
+        
+        function handleDragMove(e) {
+            if (!draggedItem) return;
+            
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left - touchOffset.x;
+            const y = e.clientY - rect.top - touchOffset.y;
+            
+            // Update item position (convert screen to pallet coords)
+            const padding = 10;
+            const scaleX = (rect.width - 2*padding) / currentPalletSize.width;
+            const scaleY = (rect.height - 2*padding) / currentPalletSize.length;
+            
+            draggedItem.x = Math.max(0, Math.min(currentPalletSize.width - draggedItem.width, (x - padding) / scaleX));
+            draggedItem.y = Math.max(0, Math.min(currentPalletSize.length - draggedItem.length, (y - padding) / scaleY));
+            
+            drawPalletLayout();
+        }
+        
+        function handleDragEnd(e) {
+            draggedItem = null;
+        }
+        
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = e.target.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            const item = findItemAt(x, y);
+            if (item) {
+                draggedItem = item;
+                touchOffset.x = x - item.screenX;
+                touchOffset.y = y - item.screenY;
+                
+                // Haptic feedback if available
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+            }
+        }
+        
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!draggedItem) return;
+            
+            const touch = e.touches[0];
+            const rect = e.target.getBoundingClientRect();
+            const x = touch.clientX - rect.left - touchOffset.x;
+            const y = touch.clientY - rect.top - touchOffset.y;
+            
+            const padding = 10;
+            const scaleX = (rect.width - 2*padding) / currentPalletSize.width;
+            const scaleY = (rect.height - 2*padding) / currentPalletSize.length;
+            
+            draggedItem.x = Math.max(0, Math.min(currentPalletSize.width - draggedItem.width, (x - padding) / scaleX));
+            draggedItem.y = Math.max(0, Math.min(currentPalletSize.length - draggedItem.length, (y - padding) / scaleY));
+            
+            drawPalletLayout();
+        }
+        
+        function handleTouchEnd(e) {
+            if (draggedItem && navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+            draggedItem = null;
+        }
+        
+        function findItemAt(screenX, screenY) {
+            const canvas = document.getElementById('palletCanvas');
+            const padding = 10;
+            const scaleX = (canvas.width - 2*padding) / currentPalletSize.width;
+            const scaleY = (canvas.height - 2*padding) / currentPalletSize.length;
+            
+            for (let item of palletItems) {
+                const x = padding + item.x * scaleX;
+                const y = padding + item.y * scaleY;
+                const w = item.width * scaleX;
+                const h = item.length * scaleY;
+                
+                if (screenX >= x && screenX <= x + w && screenY >= y && screenY <= y + h) {
+                    item.screenX = x;
+                    item.screenY = y;
+                    return item;
+                }
+            }
+            return null;
         }
         
         function generateLabel() {
-            const palletId = document.getElementById('palletId').value;
-            const variety = document.getElementById('variety').value;
-            const packWeight = document.getElementById('packWeight').value;
-            const grade = document.getElementById('grade').value.trim();
-            const bagCount = document.getElementById('bagCount').value;
-            const packDate = document.getElementById('packDate').value;
-            const lotCode = document.getElementById('lotCode').value.trim();
-            
-            if (!grade || !bagCount || !packDate || !lotCode) {
-                alert('⚠️ Please fill in all required fields!');
+            if (!validateInputs()) {
+                showWarning('Please fix all errors before generating the label.');
                 return;
             }
             
-            try {
-                JsBarcode("#barcode", palletId, {
-                    format: "CODE128",
-                    width: 2,
-                    height: 80,
-                    displayValue: true,
-                    fontSize: 20,
-                    margin: 10
-                });
-            } catch (e) {
-                alert('❌ Error generating barcode: ' + e.message);
-                return;
-            }
+            showLoading();
             
-            const labelDetails = `
-                <p><strong>Pallet ID:</strong> ${palletId}</p>
-                <p><strong>Variety:</strong> ${variety}</p>
-                <p><strong>Pack Weight:</strong> ${packWeight}</p>
-                <p><strong>Grade:</strong> ${grade}</p>
-                <p><strong>Bag Count:</strong> ${bagCount} bags</p>
-                <p><strong>Pack Date:</strong> ${packDate}</p>
-                <p><strong>Lot Code:</strong> ${lotCode}</p>
-            `;
-            
-            document.getElementById('labelDetails').innerHTML = labelDetails;
-            document.getElementById('labelPreview').style.display = 'block';
-            
-            palletCounter++;
-            localStorage.setItem('palletCounter', palletCounter);
-            updatePalletID();
-            
-            document.getElementById('labelPreview').scrollIntoView({ behavior: 'smooth' });
+            setTimeout(() => {
+                const palletId = document.getElementById('palletId').value;
+                const variety = document.getElementById('variety').value;
+                const packWeight = document.getElementById('packWeight').value;
+                const grade = document.getElementById('grade').value.trim();
+                const bagCount = document.getElementById('bagCount').value;
+                const packDate = document.getElementById('packDate').value;
+                const lotCode = document.getElementById('lotCode').value.trim();
+                
+                // Calculate total weight
+                const totalWeight = parseInt(bagCount) * parseInt(packWeight);
+                
+                // Check weight limit
+                if (totalWeight > MAX_WEIGHT) {
+                    hideLoading();
+                    showWarning(`⚠️ Total weight (${totalWeight} lbs) exceeds maximum pallet weight (${MAX_WEIGHT} lbs). Please reduce bag count or split into multiple pallets.`);
+                    return;
+                }
+                
+                // Generate barcode
+                try {
+                    JsBarcode("#barcode", palletId, {
+                        format: "CODE128",
+                        width: 2,
+                        height: 80,
+                        displayValue: true,
+                        fontSize: 20,
+                        margin: 10
+                    });
+                } catch (e) {
+                    hideLoading();
+                    showWarning('❌ Error generating barcode: ' + e.message);
+                    return;
+                }
+                
+                // Create label details
+                const labelDetails = `
+                    <p><strong>Pallet ID:</strong> ${palletId}</p>
+                    <p><strong>Variety:</strong> ${variety}</p>
+                    <p><strong>Pack Weight:</strong> ${packWeight} LBS</p>
+                    <p><strong>Grade:</strong> ${grade}</p>
+                    <p><strong>Bag Count:</strong> ${bagCount} bags</p>
+                    <p><strong>Total Weight:</strong> ${totalWeight} lbs</p>
+                    <p><strong>Pack Date:</strong> ${packDate}</p>
+                    <p><strong>Lot Code:</strong> ${lotCode}</p>
+                    <p><strong>Pallet Size:</strong> ${currentPalletSize.width}" × ${currentPalletSize.length}"</p>
+                `;
+                
+                document.getElementById('labelDetails').innerHTML = labelDetails;
+                document.getElementById('labelPreview').classList.add('active');
+                
+                // Save to data hub
+                const palletData = {
+                    PalletID: palletId,
+                    Variety: variety,
+                    PackWeight: packWeight + ' LBS',
+                    Grade: grade,
+                    BagCount: bagCount,
+                    TotalWeight: totalWeight,
+                    PackDate: packDate,
+                    LotCode: lotCode,
+                    PalletSize: currentPalletSize.width + 'x' + currentPalletSize.length
+                };
+                
+                DataHub.savePallet(palletData);
+                
+                // Increment counter
+                palletCounter++;
+                DataHub.setPalletCounter(palletCounter);
+                updatePalletID();
+                
+                hideLoading();
+                
+                // Scroll to preview
+                document.getElementById('labelPreview').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
         }
         
         function resetForm() {
             document.getElementById('labelForm').reset();
-            document.getElementById('labelPreview').style.display = 'none';
+            document.getElementById('labelPreview').classList.remove('active');
+            document.getElementById('palletVisualization').classList.remove('active');
+            palletItems = [];
+            
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('packDate').value = today;
             updatePalletID();
+            
+            // Reset pallet size
+            selectPalletSize('40x48');
+            
+            // Clear messages
+            document.querySelectorAll('.error-message').forEach(el => el.classList.remove('active'));
+            document.getElementById('weightWarning').classList.remove('active');
+            document.getElementById('successMessage').classList.remove('active');
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
         
+        function showWarning(message) {
+            const warning = document.getElementById('weightWarning');
+            warning.textContent = message;
+            warning.classList.add('active');
+            setTimeout(() => warning.classList.remove('active'), 5000);
+        }
+        
+        function showSuccess(message) {
+            const success = document.getElementById('successMessage');
+            success.textContent = '✅ ' + message;
+            success.classList.add('active');
+            setTimeout(() => success.classList.remove('active'), 5000);
+        }
+        
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+        
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            if (palletItems.length > 0) {
+                drawPalletLayout();
+            }
+        });
+        
+        // Initialize on load
         init();
     </script>
 </body>
