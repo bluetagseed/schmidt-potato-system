@@ -181,14 +181,14 @@
         }
         
         .button-group {
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 15px;
             margin-top: 30px;
             margin-bottom: 20px;
         }
         
         button {
-            flex: 1;
             padding: 15px;
             border: none;
             border-radius: 8px;
@@ -216,15 +216,45 @@
         .btn-secondary:hover {
             background: #e0e0e0;
         }
+
+        .btn-print {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background: #0b7dda;
+        }
         
         .counter-info {
             font-size: 0.85em;
             color: #666;
             margin-top: 5px;
         }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                max-height: none;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+        }
         
         @media (max-width: 768px) {
             .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
                 grid-template-columns: 1fr;
             }
             
@@ -333,6 +363,7 @@
                 <!-- Buttons -->
                 <div class="button-group">
                     <button type="button" class="btn-secondary" onclick="resetForm()">🔄 Reset Form</button>
+                    <button type="button" class="btn-print no-print" onclick="printPickList()" id="printBtn" style="display:none;">🖨️ Print Pick List</button>
                     <button type="submit" class="btn-primary">📥 Generate Pick List</button>
                 </div>
                 
@@ -340,9 +371,11 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <script>
         let productCount = 0;
         let products = [];
+        let lastGeneratedPickList = null;
         
         // Customer database
         const customers = {
@@ -441,16 +474,17 @@
                     '<div class="form-group">' +
                         '<label>Pack Weight *</label>' +
                         '<select class="product-weight" required onchange="calculateSummary()">' +
-  '<option value="3">3 LBS</option>' +
-'<option value="4">4 LBS</option>' +
-'<option value="5">5 LBS</option>' +
-'<option value="10">10 LBS</option>' +
-'<option value="25">25 LBS</option>' +
-'<option value="50" selected>50 LBS</option>' +
-'<option value="50">5/10 = 50 LBS</option>' +
-'<option value="50">10/5 = 50 LBS</option>' +
-'<option value="100">100 LBS</option>' +
-'<option value="bulk">Bulk Pack</option>' +                          
+                            '<option value="">Select Weight</option>' +
+                            '<option value="3">3 LBS</option>' +
+                            '<option value="4">4 LBS</option>' +
+                            '<option value="5">5 LBS</option>' +
+                            '<option value="10">10 LBS</option>' +
+                            '<option value="25">25 LBS</option>' +
+                            '<option value="50" selected>50 LBS</option>' +
+                            '<option value="50">5/10 = 50 LBS</option>' +
+                            '<option value="50">10/5 = 50 LBS</option>' +
+                            '<option value="100">100 LBS</option>' +
+                            '<option value="bulk">Bulk Pack</option>' +
                         '</select>' +
                     '</div>' +
                 '</div>' +
@@ -491,60 +525,66 @@
             }
         }
         
-        // Calculate summary with smart merge
+        // Calculate summary with MIX BY WEIGHT logic
         function calculateSummary() {
-            var mergedGroups = {};
+            var weightGroups = {};
             
-            // Group products by variety + weight + grade
+            // Step 1: Group ALL products by WEIGHT ONLY
             products.forEach(function(productNum) {
                 var productCard = document.getElementById('product-' + productNum);
                 if (productCard) {
                     var variety = productCard.querySelector('.product-variety').value;
                     var weight = productCard.querySelector('.product-weight').value;
+                    var weightLabel = productCard.querySelector('.product-weight').selectedOptions[0].text;
                     var grade = productCard.querySelector('.product-grade').value;
                     var totalBags = parseInt(productCard.querySelector('.product-total-bags').value) || 0;
-                    var customBagsPerPallet = parseInt(productCard.querySelector('.product-bags-per-pallet').value) || 40;
+                    var bagsPerPallet = parseInt(productCard.querySelector('.product-bags-per-pallet').value) || 40;
                     
                     if (variety && weight && grade && totalBags > 0) {
-                        var groupKey = variety + '|' + weight + '|' + grade + '|' + customBagsPerPallet;
-                        
-                        if (!mergedGroups[groupKey]) {
-                            mergedGroups[groupKey] = {
-                                variety: variety,
+                        if (!weightGroups[weight]) {
+                            weightGroups[weight] = {
                                 weight: weight,
-                                grade: grade,
-                                bagsPerPallet: customBagsPerPallet,
-                                totalBags: 0,
-                                sources: []
+                                weightLabel: weightLabel,
+                                bagsPerPallet: bagsPerPallet,
+                                products: []
                             };
                         }
                         
-                        mergedGroups[groupKey].totalBags += totalBags;
-                        mergedGroups[groupKey].sources.push(productNum);
+                        weightGroups[weight].products.push({
+                            variety: variety,
+                            grade: grade,
+                            bags: totalBags,
+                            weightLabel: weightLabel
+                        });
                     }
                 }
             });
             
-            // Calculate totals
+            // Step 2: Calculate pallets by filling each weight group
             var currentPalletCounter = getPalletCounter();
-            var palletIndex = 0;
             var totalPallets = 0;
             var totalBags = 0;
             var totalWeight = 0;
             var allPalletIDs = [];
             
-            for (var groupKey in mergedGroups) {
-                var group = mergedGroups[groupKey];
-                var numPallets = Math.ceil(group.totalBags / group.bagsPerPallet);
-                totalPallets += numPallets;
-                totalBags += group.totalBags;
-                totalWeight += (group.totalBags * parseInt(group.weight));
+            for (var weight in weightGroups) {
+                var group = weightGroups[weight];
+                var totalBagsInGroup = 0;
                 
-                for (var i = 0; i < numPallets; i++) {
-                    var palletID = 'P-' + String(currentPalletCounter + palletIndex).padStart(3, '0');
+                group.products.forEach(function(prod) {
+                    totalBagsInGroup += prod.bags;
+                });
+                
+                var palletsNeeded = Math.ceil(totalBagsInGroup / group.bagsPerPallet);
+                
+                for (var i = 0; i < palletsNeeded; i++) {
+                    var palletID = 'P-' + String(currentPalletCounter + totalPallets).padStart(3, '0');
                     allPalletIDs.push(palletID);
-                    palletIndex++;
+                    totalPallets++;
                 }
+                
+                totalBags += totalBagsInGroup;
+                totalWeight += (totalBagsInGroup * parseFloat(weight));
             }
             
             document.getElementById('totalPallets').value = totalPallets;
@@ -586,76 +626,104 @@
             var shipDate = document.getElementById('shipDate').value;
             var deliveryDate = document.getElementById('deliveryDate').value;
             
-            // SMART MERGE: Group products by variety|weight|grade|bagsPerPallet FIRST
-            var mergedGroups = {};
+            // SMART MERGE: Group by WEIGHT ONLY (MIX varieties/grades)
+            var weightGroups = {};
             
             products.forEach(function(productNum) {
                 var productCard = document.getElementById('product-' + productNum);
                 if (productCard) {
                     var variety = productCard.querySelector('.product-variety').value;
                     var weight = productCard.querySelector('.product-weight').value;
+                    var weightLabel = productCard.querySelector('.product-weight').selectedOptions[0].text;
                     var grade = productCard.querySelector('.product-grade').value;
                     var totalBags = parseInt(productCard.querySelector('.product-total-bags').value) || 0;
-                    var customBagsPerPallet = parseInt(productCard.querySelector('.product-bags-per-pallet').value) || 40;
+                    var bagsPerPallet = parseInt(productCard.querySelector('.product-bags-per-pallet').value) || 40;
                     
                     if (variety && weight && grade && totalBags > 0) {
-                        // Create unique key for grouping
-                        var groupKey = variety + '|' + weight + '|' + grade + '|' + customBagsPerPallet;
-                        
-                        if (!mergedGroups[groupKey]) {
-                            mergedGroups[groupKey] = {
-                                variety: variety,
+                        if (!weightGroups[weight]) {
+                            weightGroups[weight] = {
                                 weight: weight,
-                                grade: grade,
-                                bagsPerPallet: customBagsPerPallet,
-                                totalBags: 0
+                                bagsPerPallet: bagsPerPallet,
+                                products: []
                             };
                         }
                         
-                        // Merge bags from matching entries
-                        mergedGroups[groupKey].totalBags += totalBags;
+                        weightGroups[weight].products.push({
+                            variety: variety,
+                            grade: grade,
+                            bags: totalBags,
+                            weightLabel: weightLabel
+                        });
                     }
                 }
             });
             
-            // Generate pallets from MERGED groups
+            // Generate pallets from weight groups
             var currentPalletCounter = getPalletCounter();
             var palletIndex = 0;
             var allPallets = [];
             var csvData = [];
             
             // Add CSV header
-            csvData.push(['Pallet ID', 'Variety', 'Weight (LBS)', 'Grade', 'Bags', 'Total Weight']);
+            csvData.push(['Pallet ID', 'Products on Pallet', 'Total Bags', 'Total Weight (LBS)', 'Pack Weight']);
             
-            // Process each merged group
-            for (var groupKey in mergedGroups) {
-                var group = mergedGroups[groupKey];
-                var numPallets = Math.ceil(group.totalBags / group.bagsPerPallet);
-                var remainingBags = group.totalBags;
+            // Process each weight group
+            for (var weight in weightGroups) {
+                var group = weightGroups[weight];
+                var remainingProducts = JSON.parse(JSON.stringify(group.products));
+                var bagsPerPallet = group.bagsPerPallet;
                 
-                // Create pallets for this group
-                for (var i = 0; i < numPallets; i++) {
-                    var bagsOnThisPallet = Math.min(group.bagsPerPallet, remainingBags);
+                while (remainingProducts.length > 0) {
                     var palletID = 'P-' + String(currentPalletCounter + palletIndex).padStart(3, '0');
-                    var palletWeight = bagsOnThisPallet * parseInt(group.weight);
+                    var bagsOnPallet = 0;
+                    var productsOnPallet = [];
+                    
+                    // Fill pallet up to bagsPerPallet
+                    for (var i = 0; i < remainingProducts.length; i++) {
+                        var prod = remainingProducts[i];
+                        var bagsToAdd = Math.min(prod.bags, bagsPerPallet - bagsOnPallet);
+                        
+                        if (bagsToAdd > 0) {
+                            productsOnPallet.push({
+                                variety: prod.variety,
+                                grade: prod.grade,
+                                bags: bagsToAdd,
+                                weightLabel: prod.weightLabel
+                            });
+                            
+                            bagsOnPallet += bagsToAdd;
+                            prod.bags -= bagsToAdd;
+                        }
+                        
+                        if (bagsOnPallet >= bagsPerPallet) {
+                            break;
+                        }
+                    }
+                    
+                    // Remove fully allocated products
+                    remainingProducts = remainingProducts.filter(function(p) { return p.bags > 0; });
+                    
+                    // Create pallet data
+                    var palletWeight = bagsOnPallet * parseFloat(weight);
+                    var productDescription = productsOnPallet.map(function(p) {
+                        return p.variety + ' ' + p.weightLabel + ' ' + p.grade + ' (' + p.bags + ')';
+                    }).join('; ');
                     
                     var palletData = {
                         palletID: palletID,
                         pickListID: pickListID,
-                        variety: group.variety,
-                        weight: group.weight,
-                        grade: group.grade,
-                        bags: bagsOnThisPallet,
+                        products: productsOnPallet,
+                        totalBags: bagsOnPallet,
                         totalWeight: palletWeight,
+                        packWeight: weight,
                         customerName: customerName,
                         poNumber: poNumber,
                         shipDate: shipDate
                     };
                     
                     allPallets.push(palletData);
-                    csvData.push([palletID, group.variety, group.weight, group.grade, bagsOnThisPallet, palletWeight]);
+                    csvData.push([palletID, productDescription, bagsOnPallet, palletWeight, weight + ' LBS']);
                     
-                    remainingBags -= bagsOnThisPallet;
                     palletIndex++;
                 }
             }
@@ -674,14 +742,17 @@
                 totalPallets: allPallets.length,
                 totalBags: parseInt(document.getElementById('totalBags').value),
                 totalWeight: parseInt(document.getElementById('totalWeight').value),
-                pallets: allPallets
+                pallets: allPallets,
+                generatedAt: new Date().toISOString()
             };
             
-            // Save to localStorage (would integrate with DataHub if available)
+            // Save to localStorage
             try {
                 var pickLists = JSON.parse(localStorage.getItem('pickLists') || '[]');
                 pickLists.push(pickListData);
                 localStorage.setItem('pickLists', JSON.stringify(pickLists));
+                
+                lastGeneratedPickList = pickListData;
                 
                 // Save individual pallets
                 var existingPallets = JSON.parse(localStorage.getItem('pallets') || '[]');
@@ -700,15 +771,16 @@
             // Generate CSV export
             generateCSVExport(csvData, pickListID);
             
+            // Show print button
+            document.getElementById('printBtn').style.display = 'block';
+            
             // Show success message
             alert('✅ Pick List ' + pickListID + ' generated successfully!\n\n' +
                   'Total Pallets: ' + allPallets.length + '\n' +
                   'Total Bags: ' + pickListData.totalBags + '\n' +
                   'Total Weight: ' + pickListData.totalWeight + ' LBS\n\n' +
-                  'CSV file has been downloaded.');
-            
-            // Reset form for next order
-            resetForm();
+                  'CSV file has been downloaded.\n\n' +
+                  'Click "Print Pick List" to print the warehouse copy.');
             
             return false;
         }
@@ -716,7 +788,9 @@
         // Generate CSV export
         function generateCSVExport(csvData, pickListID) {
             var csvContent = csvData.map(function(row) {
-                return row.join(',');
+                return row.map(function(cell) {
+                    return '"' + cell + '"';
+                }).join(',');
             }).join('\n');
             
             var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -730,6 +804,80 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+        }
+
+        // Print pick list
+        function printPickList() {
+            if (!lastGeneratedPickList) {
+                alert('Please generate a pick list first!');
+                return;
+            }
+
+            var data = lastGeneratedPickList;
+            var printWindow = window.open('', '_blank');
+            
+            var timestamp = new Date(data.generatedAt).toLocaleString();
+            
+            var html = '<!DOCTYPE html><html><head><title>Pick List ' + data.pickListID + '</title>';
+            html += '<style>';
+            html += 'body { font-family: Arial, sans-serif; padding: 20px; }';
+            html += 'h1 { text-align: center; border-bottom: 3px solid #000; padding-bottom: 10px; }';
+            html += '.header-info { margin: 20px 0; border: 2px solid #000; padding: 15px; }';
+            html += '.info-row { display: flex; justify-content: space-between; margin: 5px 0; }';
+            html += '.pallet { border: 2px solid #000; margin: 15px 0; padding: 10px; page-break-inside: avoid; }';
+            html += '.pallet-header { background: #f0f0f0; padding: 10px; font-size: 18px; font-weight: bold; }';
+            html += '.product-line { margin: 8px 0; padding: 5px; border-left: 3px solid #666; padding-left: 10px; }';
+            html += '.signature { margin-top: 40px; border-top: 2px solid #000; padding-top: 20px; }';
+            html += '.sig-line { border-bottom: 1px solid #000; width: 300px; display: inline-block; margin: 0 10px; }';
+            html += 'table { width: 100%; border-collapse: collapse; margin: 10px 0; }';
+            html += 'th, td { border: 1px solid #000; padding: 8px; text-align: left; }';
+            html += 'th { background: #e0e0e0; }';
+            html += '@media print { .no-print { display: none; } }';
+            html += '</style></head><body>';
+            
+            html += '<h1>🥔 SCHMIDT POTATO - PICK LIST</h1>';
+            
+            html += '<div class="header-info">';
+            html += '<div class="info-row"><strong>Pick List ID:</strong> ' + data.pickListID + '</div>';
+            html += '<div class="info-row"><strong>Customer:</strong> ' + data.customerName + '</div>';
+            html += '<div class="info-row"><strong>PO Number:</strong> ' + data.poNumber + '</div>';
+            html += '<div class="info-row"><strong>Ship Date:</strong> ' + data.shipDate + '</div>';
+            html += '<div class="info-row"><strong>Generated:</strong> ' + timestamp + '</div>';
+            html += '<div class="info-row"><strong>Total Pallets:</strong> ' + data.totalPallets + ' | <strong>Total Bags:</strong> ' + data.totalBags + ' | <strong>Total Weight:</strong> ' + data.totalWeight + ' LBS</div>';
+            html += '</div>';
+            
+            html += '<h2>📦 PALLET BREAKDOWN</h2>';
+            
+            data.pallets.forEach(function(pallet) {
+                html += '<div class="pallet">';
+                html += '<div class="pallet-header">Pallet ID: ' + pallet.palletID + ' | Bags: ' + pallet.totalBags + ' | Weight: ' + pallet.totalWeight + ' LBS</div>';
+                html += '<table><tr><th>Variety</th><th>Pack Weight</th><th>Grade</th><th>Bags</th></tr>';
+                
+                pallet.products.forEach(function(prod) {
+                    html += '<tr>';
+                    html += '<td>' + prod.variety + '</td>';
+                    html += '<td>' + prod.weightLabel + '</td>';
+                    html += '<td>' + prod.grade + '</td>';
+                    html += '<td>' + prod.bags + '</td>';
+                    html += '</tr>';
+                });
+                
+                html += '</table></div>';
+            });
+            
+            html += '<div class="signature">';
+            html += '<p><strong>Picker Signature:</strong> <span class="sig-line"></span> <strong>Date:</strong> <span class="sig-line"></span></p>';
+            html += '</div>';
+            
+            html += '<div class="no-print" style="margin-top: 20px; text-align: center;">';
+            html += '<button onclick="window.print()" style="padding: 15px 30px; font-size: 16px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">🖨️ Print</button>';
+            html += '<button onclick="window.close()" style="padding: 15px 30px; font-size: 16px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">✕ Close</button>';
+            html += '</div>';
+            
+            html += '</body></html>';
+            
+            printWindow.document.write(html);
+            printWindow.document.close();
         }
         
         // Initialize on page load
@@ -745,6 +893,8 @@
             document.getElementById('productsContainer').innerHTML = '';
             productCount = 0;
             products = [];
+            lastGeneratedPickList = null;
+            document.getElementById('printBtn').style.display = 'none';
             
             var today = new Date();
             var year = today.getFullYear();
