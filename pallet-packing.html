@@ -197,10 +197,17 @@
                     
                     <div class="form-group">
                         <label for="packWeight">Pack Weight *</label>
-                        <select id="packWeight" required>
-                            <option value="50 LBS">50 LBS</option>
-                            <option value="10 LBS">10 LBS</option>
-                            <option value="5 LBS">5 LBS</option>
+                        <select id="packWeight" name="packWeight" onchange="updateBagCount()" required>
+                            <option value="3">3 LBS</option>
+                            <option value="4">4 LBS</option>
+                            <option value="5">5 LBS</option>
+                            <option value="10">10 LBS</option>
+                            <option value="25">25 LBS</option>
+                            <option value="50" selected>50 LBS</option>
+                            <option value="50">5/10 = 50 LBS</option>
+                            <option value="50">10/5 = 50 LBS</option>
+                            <option value="100">100 LBS</option>
+                            <option value="bulk">Bulk Pack</option>
                         </select>
                     </div>
                 </div>
@@ -230,6 +237,7 @@
                 </div>
                 
                 <button type="button" class="btn btn-primary" onclick="generateLabel()">🏷️ Generate Label</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='dashboard.html'">🏠 Back Home</button>
             </form>
             
             <div class="label-preview" id="labelPreview" style="display: none;">
@@ -249,6 +257,34 @@
             updatePalletID();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('packDate').value = today;
+            loadLotCode();
+            updateBagCount();
+        }
+        
+        function loadLotCode() {
+            const lotCode = localStorage.getItem('lastLotCode') || localStorage.getItem('lotCode') || '';
+            const lotCodeField = document.getElementById('lotCode');
+            lotCodeField.value = lotCode;
+            lotCodeField.readOnly = true;
+        }
+        
+        function updateBagCount() {
+            const weight = document.getElementById('packWeight').value;
+            const bagCountField = document.getElementById('bagCount');
+            
+            const bagCounts = {
+                '3': 600,    // 1800 lbs total
+                '4': 500,    // 2000 lbs total
+                '5': 400,    // 2000 lbs total
+                '10': 200,   // 2000 lbs total
+                '25': 80,    // 2000 lbs total
+                '50': 40,    // 2000 lbs total (5 bags/layer × 8 layers)
+                '100': 20,   // 2000 lbs total
+                'bulk': 0    // TBD
+            };
+            
+            bagCountField.value = bagCounts[weight] || 0;
+            bagCountField.readOnly = true;
         }
         
         function updatePalletID() {
@@ -286,7 +322,7 @@
             const labelDetails = `
                 <p><strong>Pallet ID:</strong> ${palletId}</p>
                 <p><strong>Variety:</strong> ${variety}</p>
-                <p><strong>Pack Weight:</strong> ${packWeight}</p>
+                <p><strong>Pack Weight:</strong> ${packWeight === 'bulk' ? 'Bulk Pack' : packWeight + ' LBS'}</p>
                 <p><strong>Grade:</strong> ${grade}</p>
                 <p><strong>Bag Count:</strong> ${bagCount} bags</p>
                 <p><strong>Pack Date:</strong> ${packDate}</p>
