@@ -3,117 +3,939 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Shipping Label Generator</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jbarcode/3.1.1/jbarcode.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jbarcode/3.1.1/jbarcode.all.min.js"></script>
+    <title>🚚 Schmidt Potato - Pallet Shipping Labels</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: linear-gradient(135deg, #f093fb, #f5576c);
-            font-family: Arial, sans-serif;
-            color: #333;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            min-height: 100vh;
             padding: 20px;
         }
+
         .container {
-            max-width: 600px;
-            margin: auto;
+            max-width: 900px;
+            margin: 30px auto;
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
         }
+
+        .header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        .form-container {
+            padding: 50px;
+            background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
         label {
             display: block;
-            margin-bottom: 5px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
+
         input, select, textarea {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background-color: white;
+            font-family: inherit;
         }
-        button {
-            background-color: #4CAF50;
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #11998e;
+            box-shadow: 0 0 0 4px rgba(17, 153, 142, 0.15);
+            transform: translateY(-1px);
+        }
+
+        input:hover, select:hover, textarea:hover {
+            border-color: #b0b0b0;
+        }
+
+        input[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .helper-text {
+            font-size: 0.85em;
+            color: #7f8c8d;
+            margin-top: 5px;
+            font-weight: 400;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
             color: white;
-            padding: 10px;
             border: none;
-            border-radius: 5px;
+            border-radius: 12px;
+            font-size: 1.3em;
+            font-weight: 700;
             cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #barcode {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
             margin-top: 20px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(17, 153, 142, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Shipping Label Generator</h1>
-        <label for="customer">Select Customer:</label>
-        <select id="customer">
-            <option value="Sysco Foods">Sysco Foods</option>
-            <option value="US Foods">US Foods</option>
-            <option value="Gordon Food Service">Gordon Food Service</option>
-        </select>
+        <div class="header">
+            <h1>🚚 Pallet Shipping Labels</h1>
+            <p>Professional Shipping Label Generator</p>
+        </div>
 
-        <label for="shipFrom">Ship From Address:</label>
-        <textarea id="shipFrom" rows="3"></textarea>
+        <div class="form-container">
+            <!-- Back to Dashboard Button -->
+            <div style="margin-bottom: 20px;">
+                <a href="dashboard.html" style="display: inline-block; padding: 10px 20px; background: #11998e; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                    ← Back to Dashboard
+                </a>
+            </div>
 
-        <label for="shipTo">Ship To Address:</label>
-        <textarea id="shipTo" rows="3"></textarea>
+            <form id="shippingForm">
+                <!-- Customer Selection -->
+                <div class="form-group full-width">
+                    <label for="customerSelect">Select Customer (or type new)</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="customerSelect" style="flex: 1;"></select>
+                        <button type="button" id="manageCustomersBtn" style="padding: 12px 20px; background: #11998e; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                            ⚙️ Manage Customers
+                        </button>
+                    </div>
+                    <div class="helper-text">💡 Select a customer to auto-fill name & address (editable after)</div>
+                </div>
 
-        <label for="palletCount">Pallet Count:</label>
-        <input type="number" id="palletCount" />
+                <!-- Customer Name and Delivery Address -->
+                <div class="form-group full-width">
+                    <label for="customerName">Customer Name *</label>
+                    <input type="text" id="customerName" required>
+                </div>
 
-        <label for="totalWeight">Total Weight:</label>
-        <input type="number" id="totalWeight" />
+                <div class="form-group full-width">
+                    <label for="deliveryAddress">Delivery Address *</label>
+                    <textarea id="deliveryAddress" required placeholder="Include street, city, state, zip"></textarea>
+                </div>
 
-        <label for="productDescription">Product Description:</label>
-        <textarea id="productDescription" rows="3"></textarea>
+                <!-- Form Grid for Multiple Fields -->
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="palletID">Pallet ID *</label>
+                        <input type="text" id="palletID" readonly>
+                        <div class="helper-text">Auto-generated</div>
+                    </div>
 
-        <label for="deliveryDate">Delivery Date:</label>
-        <input type="date" id="deliveryDate" />
+                    <div class="form-group">
+                        <label for="poNumber">PO Number</label>
+                        <input type="text" id="poNumber" placeholder="Optional">
+                    </div>
 
-        <label for="specialInstructions">Special Instructions:</label>
-        <textarea id="specialInstructions" rows="3"></textarea>
+                    <div class="form-group">
+                        <label for="variety">Variety *</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <select id="variety" required style="flex: 1;"></select>
+                            <button type="button" onclick="openPTIVarietyManager()" style="padding: 12px 20px; background: #11998e; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+                                ⚙️ Manage Varieties
+                            </button>
+                        </div>
+                    </div>
 
-        <button onclick="generateLabel()">Generate Label</button>
+                    <div class="form-group">
+                        <label for="packWeight">Pack Weight *</label>
+                        <select id="packWeight" required>
+                            <option value="">Select Weight</option>
+                            <option value="10">10 LBS</option>
+                            <option value="25">25 LBS</option>
+                            <option value="50">50 LBS</option>
+                            <option value="100">100 LBS</option>
+                        </select>
+                    </div>
 
-        <div id="barcode"></div>
-        <button onclick="window.print()">Print</button>
+                    <div class="form-group">
+                        <label for="bagCount">Bag Count *</label>
+                        <input type="number" id="bagCount" min="1" required placeholder="Number of bags">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="totalWeight">Total Weight (LBS) *</label>
+                        <input type="number" id="totalWeight" readonly>
+                        <div class="helper-text">Calculated automatically</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="packDate">Pack Date *</label>
+                        <input type="date" id="packDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shipDate">Ship Date *</label>
+                        <input type="date" id="shipDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="sscc">SSCC (Barcode) *</label>
+                        <input type="text" id="sscc" readonly>
+                        <div class="helper-text">Auto-generated</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="truckNumber">Truck Number</label>
+                        <input type="text" id="truckNumber" placeholder="Optional">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bolNumber">BOL Number</label>
+                        <input type="text" id="bolNumber" placeholder="Optional">
+                    </div>
+                </div>
+
+                <!-- Special Instructions -->
+                <div class="form-group full-width">
+                    <label for="specialInstructions">Special Instructions</label>
+                    <textarea id="specialInstructions" placeholder="Optional shipping notes"></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary">🚚 Generate Shipping Label</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Customer Management Modal -->
+    <div id="customerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; border-radius: 20px; padding: 40px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 style="margin: 0; color: #2c3e50;">🏢 Manage Customers</h2>
+                <button id="closeCustomerModal" style="background: none; border: none; font-size: 28px; cursor: pointer; color: #95a5a6;">&times;</button>
+            </div>
+
+            <!-- Add New Customer Form -->
+            <div style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); padding: 25px; border-radius: 12px; margin-bottom: 30px;">
+                <h3 style="margin-top: 0; color: white;">➕ Add New Customer</h3>
+                <div style="display: grid; gap: 15px; margin-bottom: 15px;">
+                    <input type="text" id="newCustomerName" placeholder="Customer Name" style="padding: 12px; border: none; border-radius: 8px; font-size: 14px;">
+                    <textarea id="newCustomerAddress" placeholder="Customer Address (with name on first line)" style="padding: 12px; border: none; border-radius: 8px; font-size: 14px; min-height: 100px;"></textarea>
+                </div>
+                <button id="addCustomerBtn" style="width: 100%; padding: 12px; background: white; color: #11998e; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 16px;">
+                    ✅ Add Customer
+                </button>
+            </div>
+
+            <!-- Existing Customers List -->
+            <div>
+                <h3 style="color: #2c3e50; margin-bottom: 20px;">📋 Existing Customers</h3>
+                <div id="customersList" style="display: grid; gap: 15px;">
+                    <!-- Customers will be dynamically populated here -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        function generateLabel() {
-            const customer = document.getElementById('customer').value;
-            const shipFrom = document.getElementById('shipFrom').value;
-            const shipTo = document.getElementById('shipTo').value;
-            const palletCount = document.getElementById('palletCount').value;
-            const totalWeight = document.getElementById('totalWeight').value;
-            const productDescription = document.getElementById('productDescription').value;
-            const deliveryDate = document.getElementById('deliveryDate').value;
-            const specialInstructions = document.getElementById('specialInstructions').value;
-
-            const labelContent = `
-                Customer: ${customer}
-                Ship From: ${shipFrom}
-                Ship To: ${shipTo}
-                Pallet Count: ${palletCount}
-                Total Weight: ${totalWeight}
-                Product Description: ${productDescription}
-                Delivery Date: ${deliveryDate}
-                Special Instructions: ${specialInstructions}
-            `;
-            var barcodeValue = 'BarcodeValueHere'; // Set your barcode value here
-            JsBarcode("#barcode", barcodeValue, {
-                format: "CODE128",
-                displayValue: true
-            });
-
-            alert(labelContent); // For demo purpose
+        // Initialize customers from localStorage
+        function initializeCustomers() {
+            const config = JSON.parse(localStorage.getItem('shippingConfig') || '{}');
+            
+            if (!config.customersDB) {
+                config.customersDB = [
+                    { id: 'sysco', name: 'Sysco Foods - Minneapolis', address: 'Sysco Foods - Minneapolis\n5001 Sixth Street SE\nMinneapolis, MN 55414' },
+                    { id: 'usfoods', name: 'US Foods - Fargo', address: 'US Foods - Fargo\n4141 31st Avenue S\nFargo, ND 58104' },
+                    { id: 'gordon', name: 'Gordon Food Service - Duluth', address: 'Gordon Food Service - Duluth\n5102 Miller Trunk Hwy\nDuluth, MN 55811' },
+                    { id: 'pfg', name: 'Performance Food Group', address: 'Performance Food Group\n1350 Mendota Heights Rd\nSt. Paul, MN 55120' },
+                    { id: 'reinhart', name: 'Reinhart Foodservice', address: 'Reinhart Foodservice\n3333 7th Avenue S\nMoorhead, MN 56560' }
+                ];
+                localStorage.setItem('shippingConfig', JSON.stringify(config));
+            }
+            
+            return config.customersDB;
         }
+
+        // Load customers into dropdown
+        function loadCustomersIntoDropdown() {
+            const customers = initializeCustomers();
+            const customerSelect = document.getElementById('customerSelect');
+            
+            customerSelect.innerHTML = '<option value="">-- Select Existing Customer --</option>';
+            customerSelect.innerHTML += '<option value="new">➕ Add New Customer</option>';
+            
+            customers.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.name;
+                customerSelect.appendChild(option);
+            });
+        }
+
+        // Load varieties from PTI localStorage
+        function loadVarietiesFromPTI() {
+            const config = JSON.parse(localStorage.getItem('potatoLabelConfig') || '{}');
+            const varieties = config.varietiesDB || [
+                { name: 'Red Pontiac', plu: '', upc: '' },
+                { name: 'Kennebec', plu: '', upc: '' },
+                { name: 'Yukon Gold', plu: '', upc: '' },
+                { name: 'Russet Burbank', plu: '', upc: '' },
+                { name: 'Norland', plu: '', upc: '' }
+            ];
+            
+            const varietySelect = document.getElementById('variety');
+            varietySelect.innerHTML = '<option value="">Select Variety</option>';
+            
+            varieties.forEach(v => {
+                const option = document.createElement('option');
+                option.value = v.name;
+                option.textContent = v.name;
+                varietySelect.appendChild(option);
+            });
+        }
+
+        // Open PTI Variety Manager
+        function openPTIVarietyManager() {
+            alert('💡 To manage varieties, go to:\n\nPTI Case Labels → Manage Varieties\n\nVarieties are shared across all forms!');
+        }
+
+        // Get variety code
+        function getVarietyCode(varietyName) {
+            const config = JSON.parse(localStorage.getItem('potatoLabelConfig') || '{}');
+            const variety = config.varietiesDB?.find(v => v.name === varietyName);
+            
+            if (variety && variety.plu) {
+                return variety.plu.substring(0, 2).toUpperCase();
+            }
+            
+            return varietyName.substring(0, 2).toUpperCase();
+        }
+
+        // Generate Pallet ID
+        function generatePalletID() {
+            const config = JSON.parse(localStorage.getItem('shippingConfig') || '{}');
+            const counter = (config.palletCounter || 0) + 1;
+            const palletID = `PLT-${String(counter).padStart(6, '0')}`;
+            document.getElementById('palletID').value = palletID;
+            return palletID;
+        }
+
+        // Generate SSCC
+        function generateSSCC() {
+            const config = JSON.parse(localStorage.getItem('shippingConfig') || '{}');
+            const counter = (config.ssccCounter || 0) + 1;
+            const sscc = `00${String(counter).padStart(16, '0')}`;
+            document.getElementById('sscc').value = sscc;
+            return sscc;
+        }
+
+        // Calculate Total Weight
+        function calculateTotalWeight() {
+            const packWeight = parseFloat(document.getElementById('packWeight').value) || 0;
+            const bagCount = parseFloat(document.getElementById('bagCount').value) || 0;
+            const totalWeight = packWeight * bagCount;
+            document.getElementById('totalWeight').value = totalWeight;
+        }
+
+        // Show/Hide Customer Modal
+        document.getElementById('manageCustomersBtn').addEventListener('click', function() {
+            document.getElementById('customerModal').style.display = 'flex';
+            renderCustomersList();
+        });
+
+        document.getElementById('closeCustomerModal').addEventListener('click', function() {
+            document.getElementById('customerModal').style.display = 'none';
+        });
+
+        document.getElementById('customerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+
+        // Add New Customer
+        document.getElementById('addCustomerBtn').addEventListener('click', function() {
+            const name = document.getElementById('newCustomerName').value.trim();
+            const address = document.getElementById('newCustomerAddress').value.trim();
+            
+            if (!name || !address) {
+                alert('Please enter both customer name and address');
+                return;
+            }
+            
+            const config = JSON.parse(localStorage.getItem('shippingConfig') || '{}');
+            if (!config.customersDB) config.customersDB = [];
+            
+            const id = 'custom_' + Date.now();
+            config.customersDB.push({ id, name, address });
+            
+            localStorage.setItem('shippingConfig', JSON.stringify(config));
+            
+            document.getElementById('newCustomerName').value = '';
+            document.getElementById('newCustomerAddress').value = '';
+            
+            loadCustomersIntoDropdown();
+            renderCustomersList();
+            showSuccessMessage('✅ Customer added successfully!');
+        });
+
+        // Render Customers List
+        function renderCustomersList() {
+            const customers = initializeCustomers();
+            const listContainer = document.getElementById('customersList');
+            
+            listContainer.innerHTML = '';
+            
+            customers.forEach((customer, index) => {
+                const customerCard = document.createElement('div');
+                customerCard.style.cssText = 'background: #f8f9fa; padding: 20px; border-radius: 12px; border: 2px solid #e0e0e0;';
+                
+                customerCard.innerHTML = `
+                    <div style="display: grid; gap: 15px;">
+                        <input type="text" value="${customer.name}" id="customerName_${index}" 
+                               style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-weight: 600;">
+                        <textarea id="customerAddress_${index}" 
+                                  style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; min-height: 80px;">${customer.address}</textarea>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="saveCustomer(${index})" style="flex: 1; padding: 10px 15px; background: #27ae60; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                💾 Save
+                            </button>
+                            <button onclick="deleteCustomer(${index})" style="flex: 1; padding: 10px 15px; background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                listContainer.appendChild(customerCard);
+            });
+        }
+
+        // Save Customer
+        function saveCustomer(index) {
+            const config = JSON.parse(localStorage.getItem('shippingConfig') || '{}');
+            
+            const name = document.getElementById(`customerName_${index}`).value.trim();
+            const address = document.getElementById(`customerAddress_${index}`).value.trim();
+            
+            if (!name || !address) {
+                alert('Customer name and address cannot be empty');
+                return;
+            }
+            
+            config.customersDB[index].name = name;
+            config.customersDB[index].address = address;
+            
+            localStorage.setItem('shippingConfig', JSON.stringify(config));
+            
+            loadCustomersIntoDropdown();
+            showSuccessMessage('✅ Customer updated successfully!');
+        }
+
+        // Delete Customer
+        function deleteCustomer(index) {
+            if (!confirm('Are you sure you want to delete this customer?')) {
+                return;
+            }
+            
+            const config = JSON.parse(localStorage.getItem('shippingConfig') || '{}');
+            config.customersDB.splice(index, 1);
+            
+            localStorage.setItem('shippingConfig', JSON.stringify(config));
+            
+            loadCustomersIntoDropdown();
+            renderCustomersList();
+            showSuccessMessage('🗑️ Customer deleted successfully!');
+        }
+
+        // Update customer selection handler
+        document.getElementById('customerSelect').addEventListener('change', function() {
+            const selected = this.value;
+            
+            if (selected === 'new' || selected === '') {
+                document.getElementById('customerName').value = '';
+                document.getElementById('deliveryAddress').value = '';
+                document.getElementById('customerName').focus();
+            } else {
+                const config = JSON.parse(localStorage.getItem('shippingConfig') || '{}');
+                const customer = config.customersDB?.find(c => c.id === selected);
+                
+                if (customer) {
+                    document.getElementById('customerName').value = customer.name;
+                    document.getElementById('deliveryAddress').value = customer.address;
+                }
+            }
+        });
+
+        // CSV Functions
+        function downloadFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function logShippingToCSV(data) {
+            const timestamp = new Date().toISOString();
+            const csvRow = [
+                timestamp,
+                data.palletID,
+                data.customerName,
+                data.poNumber,
+                data.variety,
+                data.packWeight,
+                data.bagCount,
+                data.totalWeight,
+                data.shipDate,
+                data.sscc,
+                data.truckNumber,
+                data.bolNumber
+            ].join(',');
+            
+            const csvContent = 'Timestamp,Pallet ID,Customer,PO Number,Variety,Pack Weight,Bag Count,Total Weight,Ship Date,SSCC,Truck Number,BOL Number\n' + csvRow;
+            const filename = `shipping_log_${data.palletID}_${Date.now()}.csv`;
+            downloadFile(filename, csvContent);
+        }
+
+        function appendToDailyShippingCSV(data) {
+            const today = new Date().toISOString().split('T')[0];
+            const storageKey = `shipping_csv_log_${today}`;
+            
+            let csvLog = localStorage.getItem(storageKey);
+            if (!csvLog) {
+                csvLog = 'Timestamp,Pallet ID,Customer,PO Number,Variety,Pack Weight,Bag Count,Total Weight,Ship Date,SSCC,Truck Number,BOL Number\n';
+            }
+            
+            const timestamp = new Date().toISOString();
+            const csvRow = [
+                timestamp,
+                data.palletID,
+                data.customerName,
+                data.poNumber,
+                data.variety,
+                data.packWeight,
+                data.bagCount,
+                data.totalWeight,
+                data.shipDate,
+                data.sscc,
+                data.truckNumber,
+                data.bolNumber
+            ].join(',');
+            
+            csvLog += csvRow + '\n';
+            localStorage.setItem(storageKey, csvLog);
+            
+            const dailyFilename = `shipping_labels_${today}.csv`;
+            downloadFile(dailyFilename, csvLog);
+        }
+
+        // Success Message
+        function showSuccessMessage(message) {
+            const existingMsg = document.getElementById('shippingSuccessMsg');
+            if (existingMsg) existingMsg.remove();
+            
+            const msg = document.createElement('div');
+            msg.id = 'shippingSuccessMsg';
+            msg.textContent = message;
+            msg.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #27ae60, #2ecc71);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                font-weight: 600;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(msg);
+            
+            setTimeout(() => {
+                msg.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => msg.remove(), 300);
+            }, 3000);
+        }
+
+        // Update Shipping Metrics
+        function updateShippingMetrics() {
+            const config = JSON.parse(localStorage.getItem('shippingConfig') || '{}');
+            if (!config.metrics) config.metrics = { totalShipments: 0 };
+            
+            config.metrics.totalShipments++;
+            config.metrics.lastShipment = new Date().toISOString();
+            
+            localStorage.setItem('shippingConfig', JSON.stringify(config));
+        }
+
+        // Form Submission Handler
+        document.getElementById('shippingForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form data
+            const variety = document.getElementById('variety').value;
+            const packWeightValue = document.getElementById('packWeight').value;
+            const bagCount = document.getElementById('bagCount').value;
+            const totalWeight = document.getElementById('totalWeight').value;
+            const shipDate = document.getElementById('shipDate').value;
+            const packDate = document.getElementById('packDate').value;
+            
+            // Format dates
+            const formattedShipDate = new Date(shipDate).toLocaleDateString('en-US');
+            const formattedPackDate = new Date(packDate).toLocaleDateString('en-US');
+            
+            // Get variety code
+            const varietyCode = getVarietyCode(variety);
+            
+            // Create label content
+            const formData = {
+                PalletID: document.getElementById('palletID').value,
+                CustomerName: document.getElementById('customerName').value,
+                DeliveryAddress: document.getElementById('deliveryAddress').value,
+                PONumber: document.getElementById('poNumber').value,
+                Variety: variety,
+                VarietyCode: varietyCode,
+                PackWeight: packWeightValue + ' LBS',
+                BagCount: bagCount,
+                TotalWeight: totalWeight + ' LBS',
+                PackDate: formattedPackDate,
+                ShipDate: formattedShipDate,
+                SSCC: document.getElementById('sscc').value,
+                TruckNumber: document.getElementById('truckNumber').value,
+                BOLNumber: document.getElementById('bolNumber').value,
+                SpecialInstructions: document.getElementById('specialInstructions').value
+            };
+            
+            // Create label HTML
+            const labelHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Shipping Label - ${formData.PalletID}</title>
+    <style>
+        @page { margin: 0.5in; }
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .label-header {
+            text-align: center;
+            border-bottom: 3px solid #11998e;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .label-header h1 {
+            color: #11998e;
+            margin: 0;
+            font-size: 2em;
+        }
+        .section {
+            margin-bottom: 25px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #11998e;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #11998e;
+            padding-bottom: 5px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+        .info-value {
+            font-size: 1.1em;
+            margin-top: 3px;
+        }
+        .barcode-section {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .barcode-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-top: 10px;
+        }
+        @media print {
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="label-header">
+        <h1>🚚 PALLET SHIPPING LABEL</h1>
+        <p style="font-size: 1.2em; margin: 5px 0;">Schmidt Potato System</p>
+    </div>
+
+    <div class="section">
+        <div class="section-title">📦 Pallet Information</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">PALLET ID</span>
+                <span class="info-value">${formData.PalletID}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">VARIETY</span>
+                <span class="info-value">${formData.Variety} (${formData.VarietyCode})</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">PACK WEIGHT</span>
+                <span class="info-value">${formData.PackWeight}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">BAG COUNT</span>
+                <span class="info-value">${formData.BagCount} bags</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">TOTAL WEIGHT</span>
+                <span class="info-value">${formData.TotalWeight}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">PACK DATE</span>
+                <span class="info-value">${formData.PackDate}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🏢 Customer & Delivery</div>
+        <div class="info-item" style="margin-bottom: 15px;">
+            <span class="info-label">CUSTOMER NAME</span>
+            <span class="info-value">${formData.CustomerName}</span>
+        </div>
+        <div class="info-item">
+            <span class="info-label">DELIVERY ADDRESS</span>
+            <span class="info-value" style="white-space: pre-line;">${formData.DeliveryAddress}</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">🚚 Shipping Details</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">SHIP DATE</span>
+                <span class="info-value">${formData.ShipDate}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">PO NUMBER</span>
+                <span class="info-value">${formData.PONumber || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">TRUCK NUMBER</span>
+                <span class="info-value">${formData.TruckNumber || 'N/A'}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">BOL NUMBER</span>
+                <span class="info-value">${formData.BOLNumber || 'N/A'}</span>
+            </div>
+        </div>
+        ${formData.SpecialInstructions ? `
+        <div class="info-item" style="margin-top: 15px;">
+            <span class="info-label">SPECIAL INSTRUCTIONS</span>
+            <span class="info-value">${formData.SpecialInstructions}</span>
+        </div>
+        ` : ''}
+    </div>
+
+    <div class="barcode-section">
+        <div class="section-title" style="border-bottom: none;">📊 SSCC Barcode</div>
+        <div class="barcode-value">${formData.SSCC}</div>
+        <p style="margin-top: 10px; color: #777;">Scan this code for tracking</p>
+    </div>
+
+    <div class="no-print" style="text-align: center; margin-top: 30px;">
+        <button onclick="window.print()" style="padding: 15px 30px; background: #11998e; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; font-weight: 600;">
+            🖨️ Print Label
+        </button>
+        <button onclick="window.close()" style="padding: 15px 30px; background: #95a5a6; color: white; border: none; border-radius: 8px; font-size: 1.1em; cursor: pointer; font-weight: 600; margin-left: 10px;">
+            Close
+        </button>
+    </div>
+</body>
+</html>
+            `;
+            
+            // Update counters in localStorage
+            const config = JSON.parse(localStorage.getItem('shippingConfig') || '{}');
+            config.palletCounter = (config.palletCounter || 0) + 1;
+            config.ssccCounter = (config.ssccCounter || 0) + 1;
+            localStorage.setItem('shippingConfig', JSON.stringify(config));
+            
+            // Update shipping metrics
+            updateShippingMetrics();
+            
+            // Log to CSV
+            const csvData = {
+                palletID: formData.PalletID,
+                customerName: formData.CustomerName,
+                poNumber: formData.PONumber,
+                variety: variety,
+                packWeight: formData.PackWeight,
+                bagCount: bagCount,
+                totalWeight: formData.TotalWeight,
+                shipDate: formattedShipDate,
+                sscc: formData.SSCC,
+                truckNumber: formData.TruckNumber,
+                bolNumber: formData.BOLNumber
+            };
+            
+            logShippingToCSV(csvData);
+            appendToDailyShippingCSV(csvData);
+            
+            // Open label in new window
+            const labelWindow = window.open('', '_blank');
+            labelWindow.document.write(labelHTML);
+            labelWindow.document.close();
+            
+            // Show success message
+            showSuccessMessage('✅ Shipping label generated successfully!');
+            
+            // Reset form and regenerate IDs
+            setTimeout(() => {
+                generatePalletID();
+                generateSSCC();
+            }, 500);
+        });
+
+        // Auto-calculate total weight
+        document.getElementById('packWeight').addEventListener('change', calculateTotalWeight);
+        document.getElementById('bagCount').addEventListener('input', calculateTotalWeight);
+
+        // Initialize Form
+        function initializeForm() {
+            try {
+                // Set today's date
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const dateString = `${year}-${month}-${day}`;
+                document.getElementById('packDate').value = dateString;
+                document.getElementById('shipDate').value = dateString;
+                
+                // Load varieties and customers
+                loadVarietiesFromPTI();
+                loadCustomersIntoDropdown();
+                
+                // Generate IDs
+                generatePalletID();
+                generateSSCC();
+                calculateTotalWeight();
+            } catch (error) {
+                console.error('Initialization error:', error);
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeForm);
     </script>
 </body>
 </html>
