@@ -187,11 +187,13 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="variety">Variety *</label>
-                        <select id="variety" required>
-                            <option value="Red Pontiac">Red Pontiac</option>
+                        <select id="variety" name="variety" required onchange="handleVarietyChange()">
+                            <option value="">Select Variety</option>
                             <option value="Russet Burbank">Russet Burbank</option>
+                            <option value="Red Pontiac">Red Pontiac</option>
                             <option value="Yukon Gold">Yukon Gold</option>
-                            <option value="Red Norland">Red Norland</option>
+                            <option value="Kennebec">Kennebec</option>
+                            <option value="other">➕ Add Other Variety...</option>
                         </select>
                     </div>
                     
@@ -203,6 +205,12 @@
                             <option value="5 LBS">5 LBS</option>
                         </select>
                     </div>
+                </div>
+                
+                <div class="form-group" id="customVarietyGroup" style="display: none;">
+                    <label>Enter New Variety *</label>
+                    <input type="text" id="customVariety" placeholder="Type new variety name">
+                    <button type="button" class="btn-secondary" onclick="saveCustomVariety()">💾 Save Variety</button>
                 </div>
                 
                 <div class="form-row">
@@ -245,7 +253,76 @@
     <script>
         let palletCounter = parseInt(localStorage.getItem('palletCounter')) || 1;
         
+        // Load custom varieties from localStorage
+        function loadCustomVarieties() {
+            const customVarieties = JSON.parse(localStorage.getItem('customVarieties') || '[]');
+            const varietySelect = document.getElementById('variety');
+            const otherOption = varietySelect.querySelector('option[value="other"]');
+            
+            // Add custom varieties before "Other" option
+            customVarieties.forEach(variety => {
+                const option = document.createElement('option');
+                option.value = variety;
+                option.textContent = variety;
+                varietySelect.insertBefore(option, otherOption);
+            });
+        }
+        
+        // Handle variety selection change
+        function handleVarietyChange() {
+            const varietySelect = document.getElementById('variety');
+            const customGroup = document.getElementById('customVarietyGroup');
+            
+            if (varietySelect.value === 'other') {
+                customGroup.style.display = 'block';
+                document.getElementById('customVariety').focus();
+            } else {
+                customGroup.style.display = 'none';
+            }
+        }
+        
+        // Save custom variety
+        function saveCustomVariety() {
+            const customVariety = document.getElementById('customVariety').value.trim();
+            
+            if (!customVariety) {
+                alert('Please enter a variety name');
+                return;
+            }
+            
+            // Get existing custom varieties
+            const customVarieties = JSON.parse(localStorage.getItem('customVarieties') || '[]');
+            
+            // Check if already exists
+            if (customVarieties.includes(customVariety)) {
+                alert('This variety already exists!');
+                return;
+            }
+            
+            // Add new variety
+            customVarieties.push(customVariety);
+            localStorage.setItem('customVarieties', JSON.stringify(customVarieties));
+            
+            // Add to dropdown
+            const varietySelect = document.getElementById('variety');
+            const otherOption = varietySelect.querySelector('option[value="other"]');
+            const newOption = document.createElement('option');
+            newOption.value = customVariety;
+            newOption.textContent = customVariety;
+            varietySelect.insertBefore(newOption, otherOption);
+            
+            // Select the new variety
+            varietySelect.value = customVariety;
+            
+            // Hide custom input
+            document.getElementById('customVarietyGroup').style.display = 'none';
+            document.getElementById('customVariety').value = '';
+            
+            alert('✅ Variety "' + customVariety + '" saved!');
+        }
+        
         function init() {
+            loadCustomVarieties();
             updatePalletID();
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('packDate').value = today;
