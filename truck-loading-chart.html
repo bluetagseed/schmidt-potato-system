@@ -172,6 +172,33 @@
             background: linear-gradient(135deg, #28a745 0%, #218838 100%);
         }
 
+        .back-button-container {
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        .back-button:active {
+            transform: translateY(0);
+        }
+
         .btn-group {
             display: flex;
             gap: 10px;
@@ -610,10 +637,8 @@
             </div>
 
             <!-- Back to Dashboard Button -->
-            <div style="margin-bottom: 20px;">
-                <a href="dashboard.html" style="text-decoration: none;">
-                    <button class="secondary" style="font-size: 1.1em;">🏠 Back to Dashboard</button>
-                </a>
+            <div class="back-button-container">
+                <a href="dashboard.html" class="back-button">🏠 Back to Dashboard</a>
             </div>
 
             <!-- Section 2: Customer Selection -->
