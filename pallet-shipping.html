@@ -182,6 +182,19 @@
             </div>
 
             <form id="shippingForm">
+                <!-- BOL Number Section -->
+                <div class="section-title">📋 Bill of Lading</div>
+
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="bolNumber">BOL Number *</label>
+                        <input type="text" id="bolNumber" placeholder="Bill of Lading #" required>
+                    </div>
+                </div>
+
+                <!-- Customer/Shipping Information Section -->
+                <div class="section-title">🏢 Customer & Shipping Information</div>
+
                 <!-- Customer Selection -->
                 <div class="form-group full-width">
                     <label for="customerSelect">Select Customer (or type new)</label>
@@ -231,11 +244,16 @@
                     <div class="form-group">
                         <label for="packWeight">Pack Weight *</label>
                         <select id="packWeight" required>
-                            <option value="">Select Weight</option>
-                            <option value="10">10 LBS</option>
-                            <option value="25">25 LBS</option>
-                            <option value="50">50 LBS</option>
-                            <option value="100">100 LBS</option>
+                            <option value="">Select Pack/Weight</option>
+                            <option value="3LBS">3LBS</option>
+                            <option value="4LBS">4LBS</option>
+                            <option value="5LBS">5LBS</option>
+                            <option value="10LBS">10LBS</option>
+                            <option value="25LBS">25LBS</option>
+                            <option value="50LBS" selected>50LBS</option>
+                            <option value="5/10 LBS Bags">5/10 LBS Bags</option>
+                            <option value="10/5 LBS Bags">10/5 LBS Bags</option>
+                            <option value="Bulk">Bulk</option>
                         </select>
                     </div>
 
@@ -265,15 +283,12 @@
                         <input type="text" id="sscc" readonly>
                         <div class="helper-text">Auto-generated</div>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label for="truckNumber">Truck Number</label>
-                        <input type="text" id="truckNumber" placeholder="Optional">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="bolNumber">BOL Number</label>
-                        <input type="text" id="bolNumber" placeholder="Optional">
+                <div class="form-row">
+                    <div class="form-group full-width">
+                        <label for="truckNumber">Truck/Trailer Number</label>
+                        <input type="text" id="truckNumber" placeholder="Truck or Trailer ID">
                     </div>
                 </div>
 
@@ -412,9 +427,27 @@
 
         // Calculate Total Weight
         function calculateTotalWeight() {
-            const packWeight = parseFloat(document.getElementById('packWeight').value) || 0;
-            const bagCount = parseFloat(document.getElementById('bagCount').value) || 0;
-            const totalWeight = packWeight * bagCount;
+            var bagCount = parseInt(document.getElementById('bagCount').value) || 0;
+            var packWeightText = document.getElementById('packWeight').value;
+            
+            // Extract numeric value from pack weight
+            var packWeight = 0;
+            if (packWeightText.includes('/')) {
+                // Handle "5/10 LBS Bags" and "10/5 LBS Bags" formats
+                // For mixed bags, use average weight for calculation
+                var parts = packWeightText.split('/');
+                var weight1 = parseInt(parts[0]) || 0;
+                var weight2 = parseInt(parts[1].split(' ')[0]) || 0;
+                packWeight = (weight1 + weight2) / 2;
+            } else if (packWeightText === 'Bulk') {
+                // For bulk, don't calculate (user should enter manually or leave as 0)
+                packWeight = 0;
+            } else {
+                // Extract number from "50LBS" format
+                packWeight = parseInt(packWeightText) || 0;
+            }
+            
+            var totalWeight = bagCount * packWeight;
             document.getElementById('totalWeight').value = totalWeight;
         }
 
@@ -692,7 +725,7 @@
                 PONumber: document.getElementById('poNumber').value,
                 Variety: variety,
                 VarietyCode: varietyCode,
-                PackWeight: packWeightValue + ' LBS',
+                PackWeight: packWeightValue, // Already includes LBS or format
                 BagCount: bagCount,
                 TotalWeight: totalWeight + ' LBS',
                 PackDate: formattedPackDate,
