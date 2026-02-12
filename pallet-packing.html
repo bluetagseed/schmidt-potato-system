@@ -643,7 +643,7 @@
 
     <script>
         // State management
-        let palletCounter = DataHub.getPalletCounter();
+        let palletCounter = 1;
         let currentPalletSize = { width: 40, length: 48 };
         let palletItems = [];
         let draggedItem = null;
@@ -652,6 +652,22 @@
         // Constants
         const MAX_WEIGHT = 2000; // lbs
         const WEIGHT_WARNING_THRESHOLD = 1800; // lbs
+        
+        // Standard bag dimensions (width x length in inches)
+        const BAG_DIMENSIONS = {
+            50: { width: 18, length: 28 }, // Standard 50lb burlap sack
+            10: { width: 14, length: 20 }, // Medium 10lb bag
+            5: { width: 10, length: 14 }   // Small 5lb bag
+        };
+        
+        // Initialize data hub integration
+        try {
+            if (typeof DataHub !== 'undefined') {
+                palletCounter = DataHub.getPalletCounter() || 1;
+            }
+        } catch (e) {
+            console.warn('DataHub not available, using default counter:', e);
+        }
         
         // Initialize
         function init() {
@@ -668,15 +684,22 @@
         }
         
         function checkDuplicatePalletId(palletId) {
-            const existingPallet = DataHub.getPalletById(palletId);
-            const errorElement = document.getElementById('palletIdError');
-            if (existingPallet) {
-                errorElement.classList.add('active');
-                return true;
-            } else {
-                errorElement.classList.remove('active');
-                return false;
+            try {
+                if (typeof DataHub !== 'undefined') {
+                    const existingPallet = DataHub.getPalletById(palletId);
+                    const errorElement = document.getElementById('palletIdError');
+                    if (existingPallet) {
+                        errorElement.classList.add('active');
+                        return true;
+                    } else {
+                        errorElement.classList.remove('active');
+                        return false;
+                    }
+                }
+            } catch (e) {
+                console.warn('Error checking duplicate pallet ID:', e);
             }
+            return false;
         }
         
         function selectPalletSize(size) {
@@ -785,15 +808,10 @@
             const totalWeight = bagCount * weightPerBag;
             const palletArea = currentPalletSize.width * currentPalletSize.length;
             
-            // Estimate bag dimensions (assuming standard bag sizes)
-            let bagWidth, bagLength;
-            if (weightPerBag === 50) {
-                bagWidth = 18; bagLength = 28;
-            } else if (weightPerBag === 10) {
-                bagWidth = 14; bagLength = 20;
-            } else {
-                bagWidth = 10; bagLength = 14;
-            }
+            // Get bag dimensions from constants
+            const bagDims = BAG_DIMENSIONS[weightPerBag] || BAG_DIMENSIONS[50];
+            const bagWidth = bagDims.width;
+            const bagLength = bagDims.length;
             
             // Calculate how many bags fit per layer
             const bagsPerRow = Math.floor(currentPalletSize.width / bagWidth);
@@ -965,6 +983,17 @@
             document.getElementById('statConfig').textContent = result.configuration;
         }
         
+        function convertScreenToPalletCoords(screenX, screenY, rect, item) {
+            const padding = 10;
+            const scaleX = (rect.width - 2*padding) / currentPalletSize.width;
+            const scaleY = (rect.height - 2*padding) / currentPalletSize.length;
+            
+            const palletX = Math.max(0, Math.min(currentPalletSize.width - item.width, (screenX - padding) / scaleX));
+            const palletY = Math.max(0, Math.min(currentPalletSize.length - item.length, (screenY - padding) / scaleY));
+            
+            return { x: palletX, y: palletY };
+        }
+        
         function setupDragAndDrop() {
             const canvas = document.getElementById('palletCanvas');
             
@@ -1000,13 +1029,10 @@
             const x = e.clientX - rect.left - touchOffset.x;
             const y = e.clientY - rect.top - touchOffset.y;
             
-            // Update item position (convert screen to pallet coords)
-            const padding = 10;
-            const scaleX = (rect.width - 2*padding) / currentPalletSize.width;
-            const scaleY = (rect.height - 2*padding) / currentPalletSize.length;
-            
-            draggedItem.x = Math.max(0, Math.min(currentPalletSize.width - draggedItem.width, (x - padding) / scaleX));
-            draggedItem.y = Math.max(0, Math.min(currentPalletSize.length - draggedItem.length, (y - padding) / scaleY));
+            // Use helper function for coordinate conversion
+            const coords = convertScreenToPalletCoords(x, y, rect, draggedItem);
+            draggedItem.x = coords.x;
+            draggedItem.y = coords.y;
             
             drawPalletLayout();
         }
@@ -1030,7 +1056,11 @@
                 
                 // Haptic feedback if available
                 if (navigator.vibrate) {
-                    navigator.vibrate(50);
+                    try {
+                        navigator.vibrate(50);
+                    } catch (e) {
+                        console.warn('Vibration not supported:', e);
+                    }
                 }
             }
         }
@@ -1044,19 +1074,21 @@
             const x = touch.clientX - rect.left - touchOffset.x;
             const y = touch.clientY - rect.top - touchOffset.y;
             
-            const padding = 10;
-            const scaleX = (rect.width - 2*padding) / currentPalletSize.width;
-            const scaleY = (rect.height - 2*padding) / currentPalletSize.length;
-            
-            draggedItem.x = Math.max(0, Math.min(currentPalletSize.width - draggedItem.width, (x - padding) / scaleX));
-            draggedItem.y = Math.max(0, Math.min(currentPalletSize.length - draggedItem.length, (y - padding) / scaleY));
+            // Use helper function for coordinate conversion
+            const coords = convertScreenToPalletCoords(x, y, rect, draggedItem);
+            draggedItem.x = coords.x;
+            draggedItem.y = coords.y;
             
             drawPalletLayout();
         }
         
         function handleTouchEnd(e) {
             if (draggedItem && navigator.vibrate) {
-                navigator.vibrate(30);
+                try {
+                    navigator.vibrate(30);
+                } catch (e) {
+                    console.warn('Vibration not supported:', e);
+                }
             }
             draggedItem = null;
         }
@@ -1145,7 +1177,8 @@
                 const palletData = {
                     PalletID: palletId,
                     Variety: variety,
-                    PackWeight: packWeight + ' LBS',
+                    PackWeight: packWeight,  // Store numeric value
+                    PackWeightUnit: 'LBS',   // Store unit separately
                     Grade: grade,
                     BagCount: bagCount,
                     TotalWeight: totalWeight,
@@ -1154,12 +1187,18 @@
                     PalletSize: currentPalletSize.width + 'x' + currentPalletSize.length
                 };
                 
-                DataHub.savePallet(palletData);
-                
-                // Increment counter
-                palletCounter++;
-                DataHub.setPalletCounter(palletCounter);
-                updatePalletID();
+                try {
+                    if (typeof DataHub !== 'undefined') {
+                        DataHub.savePallet(palletData);
+                        
+                        // Increment counter
+                        palletCounter++;
+                        DataHub.setPalletCounter(palletCounter);
+                        updatePalletID();
+                    }
+                } catch (e) {
+                    console.warn('Error saving to DataHub:', e);
+                }
                 
                 hideLoading();
                 
