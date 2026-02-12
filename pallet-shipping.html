@@ -287,8 +287,15 @@
 
                 <div class="form-row">
                     <div class="form-group full-width">
-                        <label for="truckNumber">Truck/Trailer Number</label>
-                        <input type="text" id="truckNumber" placeholder="Truck or Trailer ID">
+                        <div style="display: flex; align-items: center; gap: 15px; padding: 20px; background: linear-gradient(135deg, #f39c12 0%, #e74c3c 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);">
+                            <input type="checkbox" id="doNotFreeze" style="width: 30px; height: 30px; cursor: pointer; accent-color: #e74c3c;">
+                            <label for="doNotFreeze" style="font-size: 1.4em; font-weight: 700; color: white; cursor: pointer; margin: 0; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
+                                🚫 DO NOT FREEZE
+                            </label>
+                        </div>
+                        <div class="helper-text" style="color: #e74c3c; font-weight: 600; margin-top: 10px;">
+                            ⚠️ Check this box if the shipment should not be frozen during transport
+                        </div>
                     </div>
                 </div>
 
@@ -614,11 +621,11 @@
                 escapeCSV(data.totalWeight),
                 escapeCSV(data.shipDate),
                 escapeCSV(data.sscc),
-                escapeCSV(data.truckNumber),
+                escapeCSV(data.doNotFreeze),
                 escapeCSV(data.bolNumber)
             ].join(',');
             
-            const csvContent = 'Timestamp,Pallet ID,Customer,PO Number,Variety,Pack Weight,Bag Count,Total Weight,Ship Date,SSCC,Truck Number,BOL Number\n' + csvRow;
+            const csvContent = 'Timestamp,Pallet ID,Customer,PO Number,Variety,Pack Weight,Bag Count,Total Weight,Ship Date,SSCC,Do Not Freeze,BOL Number\n' + csvRow;
             const filename = `shipping_log_${data.palletID}_${Date.now()}.csv`;
             downloadFile(filename, csvContent);
         }
@@ -629,7 +636,7 @@
             
             let csvLog = localStorage.getItem(storageKey);
             if (!csvLog) {
-                csvLog = 'Timestamp,Pallet ID,Customer,PO Number,Variety,Pack Weight,Bag Count,Total Weight,Ship Date,SSCC,Truck Number,BOL Number\n';
+                csvLog = 'Timestamp,Pallet ID,Customer,PO Number,Variety,Pack Weight,Bag Count,Total Weight,Ship Date,SSCC,Do Not Freeze,BOL Number\n';
             }
             
             const timestamp = new Date().toISOString();
@@ -644,7 +651,7 @@
                 escapeCSV(data.totalWeight),
                 escapeCSV(data.shipDate),
                 escapeCSV(data.sscc),
-                escapeCSV(data.truckNumber),
+                escapeCSV(data.doNotFreeze),
                 escapeCSV(data.bolNumber)
             ].join(',');
             
@@ -731,7 +738,7 @@
                 PackDate: formattedPackDate,
                 ShipDate: formattedShipDate,
                 SSCC: document.getElementById('sscc').value,
-                TruckNumber: document.getElementById('truckNumber').value,
+                DoNotFreeze: document.getElementById('doNotFreeze').checked ? 'YES - DO NOT FREEZE' : 'No',
                 BOLNumber: document.getElementById('bolNumber').value,
                 SpecialInstructions: document.getElementById('specialInstructions').value
             };
@@ -927,7 +934,7 @@
                 totalWeight: formData.TotalWeight,
                 shipDate: formattedShipDate,
                 sscc: formData.SSCC,
-                truckNumber: formData.TruckNumber,
+                doNotFreeze: formData.DoNotFreeze,
                 bolNumber: formData.BOLNumber
             };
             
