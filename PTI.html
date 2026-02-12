@@ -3,96 +3,552 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PTI Case Label Generator</title>
-    <script src="data-hub.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.0/JsBarcode.all.min.js"></script>
-    <link rel="stylesheet" href="styles.css">
+    <title>🥔 Schmidt Potato - PTI Label Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #764ba2;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 5px;
+        }
+
+        .info-box h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-box p {
+            color: #555;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-right: 5px;
+            margin-top: 5px;
+        }
+
+        .badge-smart {
+            background: #ff9800;
+            color: white;
+        }
+
+        .badge-auto {
+            background: #4caf50;
+            color: white;
+        }
+
+        .badge-static {
+            background: #9e9e9e;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        input[readonly] {
+            background-color: #f5f5f5;
+            cursor: not-allowed;
+        }
+
+        .input-smart {
+            background-color: #fff3e0;
+        }
+
+        .input-auto {
+            background-color: #e8f5e9;
+        }
+
+        .input-static {
+            background-color: #f5f5f5;
+        }
+
+        .learned-highlight {
+            background-color: #ff9800 !important;
+            color: white !important;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .success-message {
+            position: fixed;
+            top: 20px;
+            right: -400px;
+            background: #4caf50;
+            color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            transition: right 0.5s;
+            z-index: 1000;
+        }
+
+        .success-message.show {
+            right: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
 </head>
-<body style="background: linear-gradient(orange, yellow);">
-    <header>
-        <h1 style="text-align: center; color: white;">Schmidt Potato Case Label Generator</h1>
-    </header>
-    <main>
+<body>
+    <div class="container">
+        <header>
+            <h1>🥔 Schmidt Potato - PTI Label Generator</h1>
+        </header>
+
+        <div class="info-box">
+            <h3>📋 How to Use This Form</h3>
+            <p>
+                <span class="badge badge-smart">SMART</span> fields auto-learn: Select variety to auto-fill PLU/UPC (highlights orange when learned)<br>
+                <span class="badge badge-auto">AUTO</span> fields auto-generate: Date and Batch/Lot Number populate automatically<br>
+                <span class="badge badge-static">STATIC</span> fields are pre-filled: Company info remains constant
+            </p>
+        </div>
+
         <form id="labelForm">
-            <div>
-                <label for="variety">Variety:</label>
-                <select id="variety" name="variety">
+            <div class="form-group">
+                <label for="variety">
+                    Potato Variety <span class="badge badge-smart">SMART</span>
+                </label>
+                <select id="variety" name="variety" required>
+                    <option value="">Select Variety</option>
                     <option value="Red Pontiac">Red Pontiac</option>
                     <option value="Russet Burbank">Russet Burbank</option>
                     <option value="Yukon Gold">Yukon Gold</option>
                     <option value="Red Norland">Red Norland</option>
+                    <option value="Kennebec">Kennebec</option>
+                    <option value="Katahdin">Katahdin</option>
+                    <option value="Chieftain">Chieftain</option>
+                    <option value="Superior">Superior</option>
+                    <option value="Shepody">Shepody</option>
+                    <option value="Ranger Russet">Ranger Russet</option>
+                    <option value="Russet Norkotah">Russet Norkotah</option>
                 </select>
             </div>
-            <div>
-                <label for="packWeight">Pack Weight (lbs):</label>
-                <select id="packWeight" name="packWeight">
-                    <option value="50">50</option>
-                    <option value="10">10</option>
-                    <option value="5">5</option>
+
+            <div class="form-group">
+                <label for="packWeight">Pack/Weight</label>
+                <select id="packWeight" name="packWeight" required>
+                    <option value="">Select Pack/Weight</option>
+                    <option value="3LBS">3LBS</option>
+                    <option value="4LBS">4LBS</option>
+                    <option value="5LBS">5LBS</option>
+                    <option value="10LBS">10LBS</option>
+                    <option value="25LBS">25LBS</option>
+                    <option value="50LBS">50LBS</option>
+                    <option value="5/10 LBS Bags">5/10 LBS Bags</option>
+                    <option value="10/5 LBS Bags">10/5 LBS Bags</option>
+                    <option value="Bulk">Bulk</option>
                 </select>
             </div>
-            <div>
-                <label for="grade">Grade:</label>
-                <select id="grade" name="grade">
+
+            <div class="form-group">
+                <label for="grade">Grade</label>
+                <select id="grade" name="grade" required>
+                    <option value="">Select Grade</option>
                     <option value="Blue Tag Size A">Blue Tag Size A</option>
                     <option value="Blue Tag Size B">Blue Tag Size B</option>
-                    <option value="Red Tag">Red Tag</option>
                 </select>
             </div>
-            <div>
-                <label for="plu">PLU/UPC:</label>
-                <input type="text" id="plu" name="plu" placeholder="Enter PLU/UPC" onblur="saveCode(this.value)">
+
+            <div class="form-group">
+                <label for="packDate">Pack Date</label>
+                <input type="date" id="packDate" name="packDate" required>
             </div>
-            <div>
-                <label for="batchNumber">Batch Number:</label>
-                <input type="number" id="batchNumber" name="batchNumber" value="0" min="0" onchange="incrementBatchNumber()">
+
+            <div class="form-group">
+                <label for="pluCode">
+                    PLU Code <span class="badge badge-smart">SMART</span>
+                </label>
+                <input type="text" id="pluCode" name="pluCode" class="input-smart" placeholder="Auto-fills based on variety">
             </div>
-            <div>
-                <label for="packDate">Pack Date:</label>
-                <input type="date" id="packDate" name="packDate">
+
+            <div class="form-group">
+                <label for="upcCode">
+                    UPC Code <span class="badge badge-smart">SMART</span>
+                </label>
+                <input type="text" id="upcCode" name="upcCode" class="input-smart" placeholder="Auto-fills based on variety">
             </div>
-            <div>
-                <label for="lotCode">Lot Code:</label>
-                <input type="text" id="lotCode" name="lotCode" placeholder="Enter Lot Code">
+
+            <div class="form-group">
+                <label for="packerName">
+                    Packer Name <span class="badge badge-static">STATIC</span>
+                </label>
+                <input type="text" id="packerName" name="packerName" class="input-static" value="Schmidt Potato" readonly>
             </div>
-            <div>
-                <label for="netWeight">Net Weight:</label>
-                <input type="number" id="netWeight" name="netWeight" placeholder="Net Weight (lbs)" min="0" step="0.01">
+
+            <div class="form-group">
+                <label for="cityState">
+                    City/State <span class="badge badge-static">STATIC</span>
+                </label>
+                <input type="text" id="cityState" name="cityState" class="input-static" value="Sabin, MN" readonly>
             </div>
-            <div>
-                <button type="submit">Generate Label</button>
+
+            <div class="form-group">
+                <label for="country">
+                    Product of Country <span class="badge badge-static">STATIC</span>
+                </label>
+                <input type="text" id="country" name="country" class="input-static" value="USA" readonly>
             </div>
+
+            <div class="form-group">
+                <label for="currentDate">
+                    Current Date <span class="badge badge-auto">AUTO</span>
+                </label>
+                <input type="text" id="currentDate" name="currentDate" class="input-auto" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="batchNumber">
+                    Batch/Lot Number <span class="badge badge-auto">AUTO</span>
+                </label>
+                <input type="text" id="batchNumber" name="batchNumber" class="input-auto" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="otherInfo">
+                    Other Required Info <span class="badge badge-static">STATIC</span>
+                </label>
+                <textarea id="otherInfo" name="otherInfo" class="input-static" rows="2" readonly>KEEP FROM FREEZING</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="printQuantity">Print Quantity</label>
+                <select id="printQuantity" name="printQuantity">
+                    <option value="1">1 Label</option>
+                    <option value="5">5 Labels</option>
+                    <option value="10">10 Labels</option>
+                    <option value="25">25 Labels</option>
+                    <option value="50">50 Labels</option>
+                    <option value="custom">Custom Amount</option>
+                </select>
+            </div>
+
+            <div class="form-group hidden" id="customQuantityGroup">
+                <label for="customQuantity">Custom Quantity</label>
+                <input type="number" id="customQuantity" name="customQuantity" min="1" value="1">
+            </div>
+
+            <button type="submit" class="btn-submit">🖨️ Generate Label & Print</button>
         </form>
-        <div id="barcode" style="text-align: center; margin-top: 20px;"></div>
-    </main>
-    <footer>
-        <script>
-            document.getElementById('labelForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                generateBarcode();
-            });
+    </div>
 
-            function generateBarcode() {
-                var plu = document.getElementById('plu').value;
-                JsBarcode("#barcode", plu, {format: "CODE128"});
-                // Save to DataHub functionality can be integrated here
-                saveToDataHub();
-            }
+    <div id="successMessage" class="success-message">
+        ✅ Label generated successfully! Trigger file downloaded.
+    </div>
 
-            function saveCode(code) {
-                // Implement smart learning by saving code to local storage
-                localStorage.setItem('lastCode', code);
-            }
+    <script>
+        // Configuration object to store learned PLU/UPC codes and other settings
+        let config = {
+            varieties: {},
+            nextBatchNumber: 1
+        };
 
-            function incrementBatchNumber() {
-                var batchInput = document.getElementById('batchNumber');
-                batchInput.value = parseInt(batchInput.value) + 1;
+        // Load configuration from localStorage
+        function loadConfig() {
+            const saved = localStorage.getItem('potatoLabelConfig');
+            if (saved) {
+                config = JSON.parse(saved);
             }
+        }
 
-            function saveToDataHub() {
-                console.log('Data saved to DataHub!');
+        // Save configuration to localStorage
+        function saveConfig() {
+            localStorage.setItem('potatoLabelConfig', JSON.stringify(config));
+        }
+
+        // Initialize form with auto-generated fields
+        function initializeForm() {
+            loadConfig();
+            
+            // Set current date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('currentDate').value = today;
+            
+            // Set batch/lot number
+            const batchNum = `LOT-${String(config.nextBatchNumber).padStart(5, '0')}`;
+            document.getElementById('batchNumber').value = batchNum;
+        }
+
+        // Handle variety selection change
+        document.getElementById('variety').addEventListener('change', function() {
+            const variety = this.value;
+            const pluInput = document.getElementById('pluCode');
+            const upcInput = document.getElementById('upcCode');
+            
+            if (variety && config.varieties[variety]) {
+                // Auto-fill from learned values
+                const learned = config.varieties[variety];
+                
+                if (learned.plu) {
+                    pluInput.value = learned.plu;
+                    pluInput.classList.add('learned-highlight');
+                } else {
+                    pluInput.value = '';
+                    pluInput.classList.remove('learned-highlight');
+                }
+                
+                if (learned.upc) {
+                    upcInput.value = learned.upc;
+                    upcInput.classList.add('learned-highlight');
+                } else {
+                    upcInput.value = '';
+                    upcInput.classList.remove('learned-highlight');
+                }
+            } else {
+                pluInput.value = '';
+                upcInput.value = '';
+                pluInput.classList.remove('learned-highlight');
+                upcInput.classList.remove('learned-highlight');
             }
-        </script>
-    </footer>
+        });
+
+        // Learn PLU/UPC codes when user enters them
+        document.getElementById('pluCode').addEventListener('blur', function() {
+            const variety = document.getElementById('variety').value;
+            const plu = this.value.trim();
+            
+            if (variety && plu) {
+                if (!config.varieties[variety]) {
+                    config.varieties[variety] = {};
+                }
+                config.varieties[variety].plu = plu;
+                saveConfig();
+                this.classList.add('learned-highlight');
+            }
+        });
+
+        document.getElementById('upcCode').addEventListener('blur', function() {
+            const variety = document.getElementById('variety').value;
+            const upc = this.value.trim();
+            
+            if (variety && upc) {
+                if (!config.varieties[variety]) {
+                    config.varieties[variety] = {};
+                }
+                config.varieties[variety].upc = upc;
+                saveConfig();
+                this.classList.add('learned-highlight');
+            }
+        });
+
+        // Handle print quantity selection
+        document.getElementById('printQuantity').addEventListener('change', function() {
+            const customGroup = document.getElementById('customQuantityGroup');
+            if (this.value === 'custom') {
+                customGroup.classList.remove('hidden');
+            } else {
+                customGroup.classList.add('hidden');
+            }
+        });
+
+        // Get print quantity value
+        function getPrintQuantity() {
+            const select = document.getElementById('printQuantity');
+            if (select.value === 'custom') {
+                return document.getElementById('customQuantity').value || '1';
+            }
+            return select.value;
+        }
+
+        // Generate GTIN from UPC (add check digit if needed)
+        function generateGTIN(upc) {
+            if (!upc) return '';
+            
+            // If UPC is 12 digits, it's already valid
+            if (upc.length === 12) return upc;
+            
+            // If UPC is 11 digits, calculate check digit
+            if (upc.length === 11) {
+                let sum = 0;
+                for (let i = 0; i < 11; i++) {
+                    const digit = parseInt(upc[i]);
+                    sum += (i % 2 === 0) ? digit * 3 : digit;
+                }
+                const checkDigit = (10 - (sum % 10)) % 10;
+                return upc + checkDigit;
+            }
+            
+            return upc;
+        }
+
+        // Generate and download trigger file for BarTender
+        function generateTriggerFile(formData) {
+            const timestamp = new Date().getTime();
+            const filename = `potato_label_${timestamp}.txt`;
+            
+            // Create content with all form data
+            let content = '';
+            content += `NDF_Variety=${formData.variety}\n`;
+            content += `NDF_PackWeight=${formData.packWeight}\n`;
+            content += `NDF_Grade=${formData.grade}\n`;
+            content += `NDF_PackDate=${formData.packDate}\n`;
+            content += `NDF_PLU=${formData.pluCode}\n`;
+            content += `NDF_UPC=${formData.upcCode}\n`;
+            content += `NDF_GTIN=${generateGTIN(formData.upcCode)}\n`;
+            content += `NDF_PackerName=${formData.packerName}\n`;
+            content += `NDF_CityState=${formData.cityState}\n`;
+            content += `NDF_Country=${formData.country}\n`;
+            content += `NDF_CurrentDate=${formData.currentDate}\n`;
+            content += `NDF_BatchNumber=${formData.batchNumber}\n`;
+            content += `NDF_OtherInfo=${formData.otherInfo}\n`;
+            content += `PrintQuantity=${getPrintQuantity()}\n`;
+            content += `Timestamp=${timestamp}\n`;
+            
+            // Create blob and download
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Show success message
+        function showSuccessMessage() {
+            const message = document.getElementById('successMessage');
+            message.classList.add('show');
+            
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, 3000);
+        }
+
+        // Handle form submission
+        document.getElementById('labelForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Collect form data
+            const formData = {
+                variety: document.getElementById('variety').value,
+                packWeight: document.getElementById('packWeight').value,
+                grade: document.getElementById('grade').value,
+                packDate: document.getElementById('packDate').value,
+                pluCode: document.getElementById('pluCode').value,
+                upcCode: document.getElementById('upcCode').value,
+                packerName: document.getElementById('packerName').value,
+                cityState: document.getElementById('cityState').value,
+                country: document.getElementById('country').value,
+                currentDate: document.getElementById('currentDate').value,
+                batchNumber: document.getElementById('batchNumber').value,
+                otherInfo: document.getElementById('otherInfo').value
+            };
+            
+            // Save last lot code
+            localStorage.setItem('lastLotCode', formData.batchNumber);
+            
+            // Generate trigger file
+            generateTriggerFile(formData);
+            
+            // Increment batch number for next use
+            config.nextBatchNumber++;
+            saveConfig();
+            
+            // Show success message
+            showSuccessMessage();
+            
+            // Reset form and reinitialize
+            setTimeout(() => {
+                this.reset();
+                initializeForm();
+            }, 500);
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', initializeForm);
+    </script>
 </body>
 </html>
