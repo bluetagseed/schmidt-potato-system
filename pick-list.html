@@ -394,6 +394,131 @@
             'Kennebec': 'KE'
         };
         
+        // Load custom varieties from localStorage
+        function getCustomVarieties() {
+            return JSON.parse(localStorage.getItem('customVarieties') || '[]');
+        }
+        
+        // Build variety options HTML
+        function buildVarietyOptionsHTML() {
+            var html = '<option value="">Select Variety</option>' +
+                '<option value="Russet Burbank">Russet Burbank</option>' +
+                '<option value="Red Pontiac">Red Pontiac</option>' +
+                '<option value="Yukon Gold">Yukon Gold</option>' +
+                '<option value="Kennebec">Kennebec</option>';
+            
+            // Add custom varieties
+            var customVarieties = getCustomVarieties();
+            customVarieties.forEach(function(variety) {
+                html += '<option value="' + variety + '">' + variety + '</option>';
+            });
+            
+            html += '<option value="other">➕ Add Other Variety...</option>';
+            return html;
+        }
+        
+        // Handle variety change
+        function handleVarietyChange(selectElement) {
+            var productCard = selectElement.closest('.product-card');
+            var customGroup = productCard.querySelector('.custom-variety-group');
+            
+            if (selectElement.value === 'other') {
+                if (!customGroup) {
+                    // Create custom variety input group
+                    var customHTML = '<div class="custom-variety-group" style="margin-top: 10px;">' +
+                        '<label>Enter New Variety *</label>' +
+                        '<input type="text" class="custom-variety-input" placeholder="Type new variety name" style="width: calc(100% - 120px); margin-right: 10px;">' +
+                        '<button type="button" class="save-variety-btn" onclick="saveCustomVariety(this)" style="padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">💾 Save</button>' +
+                        '</div>';
+                    selectElement.parentElement.insertAdjacentHTML('afterend', customHTML);
+                    customGroup = productCard.querySelector('.custom-variety-group');
+                }
+                customGroup.style.display = 'block';
+                customGroup.querySelector('.custom-variety-input').focus();
+            } else if (customGroup) {
+                customGroup.style.display = 'none';
+            }
+            
+            calculateSummary();
+        }
+        
+        // Save custom variety
+        function saveCustomVariety(button) {
+            var productCard = button.closest('.product-card');
+            var customInput = productCard.querySelector('.custom-variety-input');
+            var varietySelect = productCard.querySelector('.product-variety');
+            var customGroup = productCard.querySelector('.custom-variety-group');
+            var customVariety = customInput.value.trim();
+            
+            if (!customVariety) {
+                alert('Please enter a variety name');
+                return;
+            }
+            
+            // Get existing custom varieties
+            var customVarieties = getCustomVarieties();
+            
+            // Check if already exists
+            if (customVarieties.includes(customVariety)) {
+                alert('This variety already exists!');
+                // Select the existing variety
+                varietySelect.value = customVariety;
+                customGroup.style.display = 'none';
+                customInput.value = '';
+                calculateSummary();
+                return;
+            }
+            
+            // Add new variety
+            customVarieties.push(customVariety);
+            localStorage.setItem('customVarieties', JSON.stringify(customVarieties));
+            
+            // Update variety code mapping (use first 2 letters as code)
+            if (customVariety.length >= 2) {
+                varietyCodes[customVariety] = customVariety.substring(0, 2).toUpperCase();
+            } else {
+                varietyCodes[customVariety] = customVariety.toUpperCase();
+            }
+            
+            // Rebuild all variety selects in all product cards
+            document.querySelectorAll('.product-variety').forEach(function(select) {
+                var currentValue = select.value;
+                var otherOption = select.querySelector('option[value="other"]');
+                
+                // Remove old custom varieties (those after Kennebec and before "other")
+                var options = Array.from(select.querySelectorAll('option'));
+                var kennebecIndex = options.findIndex(opt => opt.value === 'Kennebec');
+                var otherIndex = options.findIndex(opt => opt.value === 'other');
+                
+                for (var i = kennebecIndex + 1; i < otherIndex; i++) {
+                    options[i].remove();
+                }
+                
+                // Add all custom varieties
+                var allCustom = getCustomVarieties();
+                allCustom.forEach(function(variety) {
+                    var option = document.createElement('option');
+                    option.value = variety;
+                    option.textContent = variety;
+                    select.insertBefore(option, otherOption);
+                });
+                
+                // Restore selection
+                if (currentValue === 'other') {
+                    select.value = customVariety;
+                } else {
+                    select.value = currentValue;
+                }
+            });
+            
+            // Hide custom input and clear
+            customGroup.style.display = 'none';
+            customInput.value = '';
+            
+            alert('✅ Variety "' + customVariety + '" saved!');
+            calculateSummary();
+        }
+        
         // Get Pick List counter
         function getPickListCounter() {
             var counter = localStorage.getItem('pickListCounter');
@@ -463,12 +588,8 @@
                 '<div class="form-row">' +
                     '<div class="form-group">' +
                         '<label>Variety *</label>' +
-                        '<select class="product-variety" required onchange="calculateSummary()">' +
-                            '<option value="">Select Variety</option>' +
-                            '<option value="Russet Burbank">Russet Burbank</option>' +
-                            '<option value="Red Pontiac">Red Pontiac</option>' +
-                            '<option value="Yukon Gold">Yukon Gold</option>' +
-                            '<option value="Kennebec">Kennebec</option>' +
+                        '<select class="product-variety" required onchange="handleVarietyChange(this)">' +
+                            buildVarietyOptionsHTML() +
                         '</select>' +
                     '</div>' +
                     '<div class="form-group">' +
