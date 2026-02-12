@@ -1157,7 +1157,9 @@
                 
                 // Check for unsaved changes
                 if (truckDirty && previousTruckSelection !== '') {
+                    this.disabled = true; // Prevent multiple selections during prompt
                     const response = await showSavePrompt('You have unsaved changes. Do you want to save them before switching trucks?');
+                    this.disabled = false;
                     
                     if (response === 'cancel') {
                         // Revert to previous selection
@@ -1272,7 +1274,9 @@
                 
                 // Check for unsaved changes
                 if (customerDirty && previousCustomerSelection !== '') {
+                    this.disabled = true; // Prevent multiple selections during prompt
                     const response = await showSavePrompt('You have unsaved changes. Do you want to save them before switching customers?');
+                    this.disabled = false;
                     
                     if (response === 'cancel') {
                         // Revert to previous selection
