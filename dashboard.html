@@ -619,8 +619,7 @@
         // Print Truck QR Code
         function printTruckQR() {
             const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-<!DOCTYPE html>
+            printWindow.document.write(\`<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -810,12 +809,12 @@
         <p>Phone: 218-493-4254</p>
     </div>
     
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>
     <script>
         // Generate large QR code for print
         new QRCode(document.getElementById("print-qr-code"), {
             text: "https://bluetagseed.github.io/schmidt-potato-system/truck-loading-chart.html",
-            width: 288,  // 4 inches at 72 DPI
+            width: 288,
             height: 288,
             colorDark: "#000000",
             colorLight: "#ffffff",
@@ -826,10 +825,9 @@
         setTimeout(function() {
             window.print();
         }, 500);
-    </script>
+    <\/script>
 </body>
-</html>
-            `);
+</html>\`);
             printWindow.document.close();
         }
         
