@@ -24,6 +24,9 @@ const DataHub = {
         if (!localStorage.getItem('bolCounter')) {
             localStorage.setItem('bolCounter', '1');
         }
+        if (!localStorage.getItem('printerCounter')) {
+            localStorage.setItem('printerCounter', '1');
+        }
     },
     
     // Pallet Management
@@ -228,6 +231,115 @@ const DataHub = {
         this.updateTimestamp();
     },
     
+    // Printer Management
+    getPrinterCounter: function() {
+        return parseInt(localStorage.getItem('printerCounter') || '1');
+    },
+    
+    setPrinterCounter: function(value) {
+        localStorage.setItem('printerCounter', value.toString());
+        this.updateTimestamp();
+    },
+    
+    incrementPrinterCounter: function() {
+        const current = this.getPrinterCounter();
+        this.setPrinterCounter(current + 1);
+        return current;
+    },
+    
+    // Get all printers
+    getAllPrinters: function() {
+        const data = localStorage.getItem('printers');
+        return data ? JSON.parse(data) : [];
+    },
+    
+    // Get active printers only
+    getActivePrinters: function() {
+        return this.getAllPrinters().filter(p => p.isActive);
+    },
+    
+    // Get printer by ID
+    getPrinterById: function(printerId) {
+        const printers = this.getAllPrinters();
+        return printers.find(p => p.id === printerId);
+    },
+    
+    // Save printer (add or update)
+    savePrinter: function(printerData) {
+        const printers = this.getAllPrinters();
+        const existingIndex = printers.findIndex(p => p.id === printerData.id);
+        
+        printerData.updatedAt = new Date().toISOString();
+        
+        if (existingIndex >= 0) {
+            // Update existing
+            printers[existingIndex] = printerData;
+        } else {
+            // Add new
+            printerData.createdAt = new Date().toISOString();
+            printers.push(printerData);
+        }
+        
+        localStorage.setItem('printers', JSON.stringify(printers));
+        this.updateTimestamp();
+    },
+    
+    // Delete printer
+    deletePrinter: function(printerId) {
+        const printers = this.getAllPrinters();
+        const filtered = printers.filter(p => p.id !== printerId);
+        localStorage.setItem('printers', JSON.stringify(filtered));
+        this.updateTimestamp();
+    },
+    
+    // Printer Defaults Management
+    getPrinterDefaults: function() {
+        const data = localStorage.getItem('printerDefaults');
+        return data ? JSON.parse(data) : {
+            dashboard: '',
+            'truck-loading-chart': '',
+            'scanner-app': ''
+        };
+    },
+    
+    // Get default printer for a specific form
+    getDefaultPrinter: function(formName) {
+        const defaults = this.getPrinterDefaults();
+        return defaults[formName] || '';
+    },
+    
+    // Set default printer for a form
+    setDefaultPrinter: function(formName, printerId) {
+        const defaults = this.getPrinterDefaults();
+        defaults[formName] = printerId;
+        localStorage.setItem('printerDefaults', JSON.stringify(defaults));
+        this.updateTimestamp();
+    },
+    
+    // Print Job Logging (optional)
+    logPrintJob: function(printerId, printerName, formName, userId = 'system') {
+        const printJobs = this.getAllPrintJobs();
+        const jobId = 'job_' + Date.now();
+        const job = {
+            id: jobId,
+            printerId: printerId,
+            printerName: printerName,
+            formName: formName,
+            userId: userId,
+            timestamp: new Date().toISOString(),
+            status: 'completed'
+        };
+        printJobs.push(job);
+        localStorage.setItem('printJobs', JSON.stringify(printJobs));
+        this.updateTimestamp();
+    },
+    
+    // Get all print jobs
+    getAllPrintJobs: function() {
+        const data = localStorage.getItem('printJobs');
+        return data ? JSON.parse(data) : [];
+    },
+    
     // Statistics
     getStatistics: function() {
         return {
@@ -236,6 +348,9 @@ const DataHub = {
             totalTrucks: this.getAllTrucks().length,
             totalLabels: this.getAllLabels().length,
             totalBOLs: this.getAllBOLs().length,
+            totalPrinters: this.getAllPrinters().length,
+            activePrinters: this.getActivePrinters().length,
+            totalPrintJobs: this.getAllPrintJobs().length,
             nextPalletID: 'P-' + String(this.getPalletCounter()).padStart(3, '0'),
             nextPickListID: 'PL-' + String(this.getPickListCounter()).padStart(3, '0'),
             nextTruckID: 'T-' + String(this.getTruckCounter()).padStart(3, '0'),

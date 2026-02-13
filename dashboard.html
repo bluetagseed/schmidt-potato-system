@@ -278,6 +278,16 @@
                 </a>
             </div>
             
+            <!-- System Settings -->
+            <div class="section-title">⚙️ System Settings</div>
+            <div class="app-grid">
+                <a href="printer-settings.html" class="app-card labels">
+                    <div class="app-icon">🖨️</div>
+                    <div class="app-title">Printer Settings</div>
+                    <div class="app-description">Configure printers and set default printer assignments for each form</div>
+                </a>
+            </div>
+            
             <!-- Data Export & Management -->
             <div class="section-title">💾 Data Management</div>
             <div class="export-section">
@@ -289,6 +299,19 @@
                 <button class="btn btn-warning" onclick="exportPickLists()">📋 Export Pick Lists Only</button>
                 <button class="btn btn-warning" onclick="exportTrucks()">🚛 Export Trucks Only</button>
                 <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+            
+            <!-- Printer & Print Section -->
+            <div class="section-title">🖨️ Print Dashboard Report</div>
+            <div class="export-section">
+                <h3 style="margin-bottom: 20px; color: #1e3c72;">Print Dashboard Summary</h3>
+                <div style="margin-bottom: 20px;">
+                    <label for="dashboardPrinterSelect" style="font-weight: 600; margin-bottom: 10px; display: block;">🖨️ Select Printer:</label>
+                    <select id="dashboardPrinterSelect" style="padding: 10px; font-size: 1em; border-radius: 8px; border: 2px solid #1e3c72; width: 100%; max-width: 400px;">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="printDashboard()">🖨️ Print Dashboard Report</button>
             </div>
             
             <!-- System Information -->
@@ -306,6 +329,67 @@
 
     <script src="data-hub.js"></script>
     <script>
+        // Load printer dropdown
+        function loadPrinterDropdown() {
+            const printers = DataHub.getActivePrinters();
+            const dropdown = document.getElementById('dashboardPrinterSelect');
+            
+            // Clear existing options except first
+            dropdown.innerHTML = '<option value="">-- Select Printer --</option>';
+            
+            // Add printer options
+            printers.forEach(printer => {
+                const option = document.createElement('option');
+                option.value = printer.id;
+                option.textContent = `${printer.name} (${printer.type})`;
+                dropdown.appendChild(option);
+            });
+            
+            // Set default or last used printer
+            const lastUsed = localStorage.getItem('lastPrinter_dashboard');
+            const defaultPrinter = DataHub.getDefaultPrinter('dashboard');
+            
+            if (lastUsed) {
+                dropdown.value = lastUsed;
+            } else if (defaultPrinter) {
+                dropdown.value = defaultPrinter;
+            }
+            
+            // Save selection to localStorage
+            dropdown.addEventListener('change', function() {
+                if (this.value) {
+                    localStorage.setItem('lastPrinter_dashboard', this.value);
+                }
+            });
+        }
+        
+        // Print dashboard report
+        function printDashboard() {
+            const selectedPrinterId = document.getElementById('dashboardPrinterSelect').value;
+            
+            if (!selectedPrinterId) {
+                alert('Please select a printer first.');
+                return;
+            }
+            
+            const printer = DataHub.getPrinterById(selectedPrinterId);
+            if (!printer) {
+                alert('Selected printer not found.');
+                return;
+            }
+            
+            // Log print job
+            DataHub.logPrintJob(printer.id, printer.name, 'dashboard');
+            
+            // Note to user about network printing
+            alert(`📄 Printing to: ${printer.name} (${printer.networkPath})\n\n` +
+                  `Note: Direct network printing requires a backend print server. ` +
+                  `The browser print dialog will open. Please select your printer manually.`);
+            
+            // Trigger browser print dialog
+            window.print();
+        }
+        
         // Update statistics on load
         function updateStats() {
             const stats = DataHub.getStatistics();
@@ -424,6 +508,7 @@
         
         // Initialize
         updateStats();
+        loadPrinterDropdown();
         
         // Auto-refresh stats every 30 seconds
         setInterval(updateStats, 30000);
