@@ -1,35 +1,35 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="styles.css">
+    <title>Schmidt Potato System</title>
 </head>
 <body>
-    <div class="dashboard">
-        <h1>Dashboard</h1>
+    <header>
+        <h1>Welcome to Schmidt Potato System</h1>
+    </header>
+    <main class="app-grid">
         <section class="shipping-loading">
             <h2>Shipping & Loading</h2>
-            <div class="cards">
-                <a href="truck-loading.html" class="app-card shipping">
-                    <div class="app-icon">🚛</div>
-                    <div class="app-title">Truck Loading Chart</div>
-                    <div class="app-description">View and manage truck loading schedules</div>
-                </a>
-                <a href="driver-checkin.html" class="app-card shipping">
-                    <div class="app-icon">🚚</div>
-                    <div class="app-title">Driver Check-In & BOL</div>
-                    <div class="app-description">Driver information capture with digital signature and BOL workflow</div>
-                </a>
-                <a href="bill-of-lading.html" class="app-card shipping">
-                    <div class="app-icon">📄</div>
-                    <div class="app-title">Bill of Lading</div>
-                    <div class="app-description">Generate and manage bills of lading</div>
-                </a>
+            <div class="app-card shipping">
+                <div class="app-icon">🚚</div>
+                <div class="app-title">Driver Check-In & BOL</div>
+                <div class="app-description">Driver information capture with digital signature and BOL workflow</div>
+            </div>
+            <div class="app-card truck-loading-chart">
+                <div class="app-icon">📦</div>
+                <div class="app-title">Truck Loading Chart</div>
+                <div class="app-description">Overview of truck loading status</div>
+            </div>
+            <div class="app-card bill-of-lading">
+                <div class="app-icon">📝</div>
+                <div class="app-title">Bill of Lading</div>
+                <div class="app-description">Generate and manage Bill of Lading documents</div>
             </div>
         </section>
-        
-    </div>
+    </main>
+    <script src="scripts.js"></script>
 </body>
 </html>
