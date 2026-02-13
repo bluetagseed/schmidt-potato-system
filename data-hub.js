@@ -295,11 +295,7 @@ const DataHub = {
     // Printer Defaults Management
     getPrinterDefaults: function() {
         const data = localStorage.getItem('printerDefaults');
-        return data ? JSON.parse(data) : {
-            dashboard: '',
-            'truck-loading-chart': '',
-            'scanner-app': ''
-        };
+        return data ? JSON.parse(data) : {};
     },
     
     // Get default printer for a specific form
@@ -314,6 +310,87 @@ const DataHub = {
         defaults[formName] = printerId;
         localStorage.setItem('printerDefaults', JSON.stringify(defaults));
         this.updateTimestamp();
+    },
+    
+    // Save form default with validation
+    saveFormDefault: function(formKey) {
+        const dropdownId = `printer_${formKey.replace(/-/g, '')}`;
+        const dropdown = document.getElementById(dropdownId);
+        
+        if (!dropdown) {
+            alert('Error: Form dropdown not found');
+            return;
+        }
+        
+        const printerId = dropdown.value;
+        
+        if (!printerId) {
+            alert('Please select a printer first.');
+            return;
+        }
+        
+        // Get current defaults
+        const defaults = this.getPrinterDefaults();
+        
+        // Update for this form
+        defaults[formKey] = printerId;
+        
+        // Save back to localStorage
+        localStorage.setItem('printerDefaults', JSON.stringify(defaults));
+        this.updateTimestamp();
+        
+        // Get printer name for message
+        const printer = this.getPrinterById(printerId);
+        const formDisplayName = this.getFormDisplayName(formKey);
+        
+        alert(`Default printer saved: ${printer.name} for ${formDisplayName}`);
+    },
+    
+    // Delete form default
+    deleteFormDefault: function(formKey) {
+        const formDisplayName = this.getFormDisplayName(formKey);
+        
+        // Confirm deletion
+        if (!confirm(`Remove default printer for ${formDisplayName}?`)) {
+            return;
+        }
+        
+        // Get current defaults
+        const defaults = this.getPrinterDefaults();
+        
+        // Remove this form's default
+        delete defaults[formKey];
+        
+        // Save back to localStorage
+        localStorage.setItem('printerDefaults', JSON.stringify(defaults));
+        this.updateTimestamp();
+        
+        // Reset dropdown
+        const dropdownId = `printer_${formKey.replace(/-/g, '')}`;
+        const dropdown = document.getElementById(dropdownId);
+        if (dropdown) {
+            dropdown.value = '';
+        }
+        
+        alert(`Default printer cleared for ${formDisplayName}`);
+    },
+    
+    // Get form display name helper
+    getFormDisplayName: function(formKey) {
+        const displayNames = {
+            'dashboard': 'Dashboard',
+            'truck-loading-chart': 'Truck Loading Chart',
+            'scanner-app': 'Scanner App',
+            'picklist': 'Pick List',
+            'pallet-packing': 'Pallet Packing',
+            'pti': 'PTI',
+            'cse': 'CSE',
+            'pallet-shipping': 'Pallet Shipping',
+            'truck-loading': 'Truck Loading',
+            'bill-of-lading': 'Bill of Lading',
+            'data-management': 'Data Management'
+        };
+        return displayNames[formKey] || formKey;
     },
     
     // Print Job Logging (optional)

@@ -32,6 +32,7 @@
             color: white;
             padding: 40px;
             text-align: center;
+            position: relative;
         }
         
         .header h1 {
@@ -42,6 +43,27 @@
         .header p {
             font-size: 1.3em;
             opacity: 0.9;
+        }
+        
+        .btn-home {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            padding: 12px 25px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-home:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
         }
         
         .nav-link {
@@ -245,23 +267,85 @@
         }
         
         /* Default Printers Section */
-        .defaults-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+        .form-printer-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.2s;
         }
         
-        .default-card {
+        .form-printer-row:hover {
+            border-color: #1e3c72;
+            box-shadow: 0 2px 8px rgba(30, 60, 114, 0.1);
+        }
+        
+        .form-printer-row label {
+            font-weight: 600;
+            color: #1e3c72;
+            width: 200px;
+            flex-shrink: 0;
+        }
+        
+        .form-printer-dropdown {
+            flex: 1;
+            max-width: 300px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
             background: white;
+        }
+        
+        .form-printer-dropdown:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+        
+        .btn-save {
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-save:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+        }
+        
+        .btn-delete {
+            padding: 10px 20px;
+            background: #ff4444;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-delete:hover {
+            background: #cc0000;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 68, 68, 0.3);
+        }
+        
+        .defaults-container {
+            background: #f5f5ff;
             border: 2px solid #1e3c72;
             border-radius: 12px;
-            padding: 20px;
-        }
-        
-        .default-card h3 {
-            color: #1e3c72;
-            margin-bottom: 15px;
+            padding: 30px;
+            margin-top: 20px;
         }
         
         @media (max-width: 768px) {
@@ -290,9 +374,9 @@
 <body>
     <div class="container">
         <div class="header">
+            <button class="btn-home" onclick="window.location.href='dashboard.html'">🏠 Home</button>
             <h1>🖨️ Printer Settings</h1>
             <p>Manage Printers & Default Assignments</p>
-            <a href="dashboard.html" class="nav-link">← Back to Dashboard</a>
         </div>
         
         <div class="content">
@@ -343,34 +427,106 @@
             
             <!-- Default Printer Assignments -->
             <div class="section-title">🎯 Default Printers by Form</div>
-            <p style="margin-bottom: 20px; color: #666;">Set the default printer for each form. Users can override this selection.</p>
+            <p style="margin-bottom: 20px; color: #666;">Set the default printer for each form. Click Save to assign or Delete to remove.</p>
             
-            <div class="defaults-grid">
-                <div class="default-card">
-                    <h3>📊 Dashboard</h3>
-                    <div class="form-group">
-                        <select id="defaultDashboard" onchange="saveDefaultPrinter('dashboard')">
-                            <option value="">-- No Default --</option>
-                        </select>
-                    </div>
+            <div class="defaults-container">
+                <div class="form-printer-row">
+                    <label>Dashboard</label>
+                    <select id="printer_dashboard" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('dashboard')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('dashboard')">Delete</button>
                 </div>
                 
-                <div class="default-card">
-                    <h3>🚛 Truck Loading Chart</h3>
-                    <div class="form-group">
-                        <select id="defaultTruckLoading" onchange="saveDefaultPrinter('truck-loading-chart')">
-                            <option value="">-- No Default --</option>
-                        </select>
-                    </div>
+                <div class="form-printer-row">
+                    <label>Truck Loading Chart</label>
+                    <select id="printer_truckloadingchart" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('truck-loading-chart')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('truck-loading-chart')">Delete</button>
                 </div>
                 
-                <div class="default-card">
-                    <h3>📱 Scanner App</h3>
-                    <div class="form-group">
-                        <select id="defaultScanner" onchange="saveDefaultPrinter('scanner-app')">
-                            <option value="">-- No Default --</option>
-                        </select>
-                    </div>
+                <div class="form-printer-row">
+                    <label>Scanner App</label>
+                    <select id="printer_scannerapp" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('scanner-app')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('scanner-app')">Delete</button>
+                </div>
+                
+                <div class="form-printer-row">
+                    <label>Pick List</label>
+                    <select id="printer_picklist" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('picklist')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('picklist')">Delete</button>
+                </div>
+                
+                <div class="form-printer-row">
+                    <label>Pallet Packing</label>
+                    <select id="printer_palletpacking" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('pallet-packing')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('pallet-packing')">Delete</button>
+                </div>
+                
+                <div class="form-printer-row">
+                    <label>PTI</label>
+                    <select id="printer_pti" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('pti')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('pti')">Delete</button>
+                </div>
+                
+                <div class="form-printer-row">
+                    <label>CSE</label>
+                    <select id="printer_cse" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('cse')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('cse')">Delete</button>
+                </div>
+                
+                <div class="form-printer-row">
+                    <label>Pallet Shipping</label>
+                    <select id="printer_palletshipping" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('pallet-shipping')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('pallet-shipping')">Delete</button>
+                </div>
+                
+                <div class="form-printer-row">
+                    <label>Truck Loading</label>
+                    <select id="printer_truckloading" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('truck-loading')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('truck-loading')">Delete</button>
+                </div>
+                
+                <div class="form-printer-row">
+                    <label>Bill of Lading</label>
+                    <select id="printer_billoflading" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('bill-of-lading')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('bill-of-lading')">Delete</button>
+                </div>
+                
+                <div class="form-printer-row">
+                    <label>Data Management</label>
+                    <select id="printer_datamanagement" class="form-printer-dropdown">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                    <button class="btn-save" onclick="DataHub.saveFormDefault('data-management')">Save</button>
+                    <button class="btn-delete" onclick="DataHub.deleteFormDefault('data-management')">Delete</button>
                 </div>
             </div>
         </div>
@@ -381,7 +537,7 @@
         // Initialize page
         function initPage() {
             loadPrinterList();
-            loadDefaultPrinters();
+            loadFormDefaults();
         }
         
         // Show add printer form
@@ -445,7 +601,7 @@
             
             // Reload list
             loadPrinterList();
-            loadDefaultPrinters();
+            loadFormDefaults();
             
             alert('✅ Printer saved successfully!');
         }
@@ -474,7 +630,7 @@
             
             DataHub.deletePrinter(printerId);
             loadPrinterList();
-            loadDefaultPrinters();
+            loadFormDefaults();
             
             alert('✅ Printer deleted successfully!');
         }
@@ -536,55 +692,41 @@
             container.innerHTML = html;
         }
         
-        // Load default printers
-        function loadDefaultPrinters() {
-            const printers = DataHub.getActivePrinters();
+        // Load form defaults for all 11 forms
+        function loadFormDefaults() {
+            const printers = DataHub.getAllPrinters();
+            const activePrinters = printers.filter(p => p.isActive);
             const defaults = DataHub.getPrinterDefaults();
             
-            // Populate dropdowns
-            const dropdowns = ['defaultDashboard', 'defaultTruckLoading', 'defaultScanner'];
-            const formNames = ['dashboard', 'truck-loading-chart', 'scanner-app'];
+            const formKeys = [
+                'dashboard', 'truck-loading-chart', 'scanner-app',
+                'picklist', 'pallet-packing', 'pti', 'cse',
+                'pallet-shipping', 'truck-loading', 'bill-of-lading',
+                'data-management'
+            ];
             
-            dropdowns.forEach((dropdownId, index) => {
+            formKeys.forEach(formKey => {
+                const dropdownId = `printer_${formKey.replace(/-/g, '')}`;
                 const dropdown = document.getElementById(dropdownId);
-                const formName = formNames[index];
                 
-                // Clear options
-                dropdown.innerHTML = '<option value="">-- No Default --</option>';
-                
-                // Add printer options
-                printers.forEach(printer => {
-                    const option = document.createElement('option');
-                    option.value = printer.id;
-                    option.textContent = printer.name;
-                    if (defaults[formName] === printer.id) {
-                        option.selected = true;
+                if (dropdown) {
+                    // Clear existing options
+                    dropdown.innerHTML = '<option value="">-- Select Printer --</option>';
+                    
+                    // Add active printers
+                    activePrinters.forEach(printer => {
+                        const option = document.createElement('option');
+                        option.value = printer.id;
+                        option.textContent = printer.name;
+                        dropdown.appendChild(option);
+                    });
+                    
+                    // Select saved default
+                    if (defaults[formKey]) {
+                        dropdown.value = defaults[formKey];
                     }
-                    dropdown.appendChild(option);
-                });
+                }
             });
-        }
-        
-        // Save default printer for a form
-        function saveDefaultPrinter(formName) {
-            const formToDropdownMap = {
-                'dashboard': 'defaultDashboard',
-                'truck-loading-chart': 'defaultTruckLoading',
-                'scanner-app': 'defaultScanner'
-            };
-            
-            const dropdownId = formToDropdownMap[formName];
-            if (!dropdownId) return;
-            
-            const printerId = document.getElementById(dropdownId).value;
-            DataHub.setDefaultPrinter(formName, printerId);
-            
-            let printerName = 'None';
-            if (printerId) {
-                const printer = DataHub.getPrinterById(printerId);
-                printerName = printer ? printer.name : 'Unknown';
-            }
-            alert(`✅ Default printer updated to: ${printerName}`);
         }
         
         // Initialize on load
