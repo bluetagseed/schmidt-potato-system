@@ -381,13 +381,8 @@
             // Log print job
             DataHub.logPrintJob(printer.id, printer.name, 'dashboard');
             
-            // Note to user about network printing
-            alert(`📄 Printing to: ${printer.name} (${printer.networkPath})\n\n` +
-                  `Note: Direct network printing requires a backend print server. ` +
-                  `The browser print dialog will open. Please select your printer manually.`);
-            
-            // Trigger browser print dialog
-            window.print();
+            // Show print dialog and trigger print
+            DataHub.showPrintDialog(printer, 'dashboard');
         }
         
         // Update statistics on load

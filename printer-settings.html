@@ -425,7 +425,7 @@
             
             // Create printer object
             const printer = {
-                id: editingId || 'printer_' + String(DataHub.getPrinterCounter()).padStart(3, '0'),
+                id: editingId || 'printer_' + Date.now(),
                 name: name,
                 type: type,
                 networkPath: networkPath,
@@ -567,19 +567,23 @@
         
         // Save default printer for a form
         function saveDefaultPrinter(formName) {
-            let dropdownId;
-            if (formName === 'dashboard') {
-                dropdownId = 'defaultDashboard';
-            } else if (formName === 'truck-loading-chart') {
-                dropdownId = 'defaultTruckLoading';
-            } else if (formName === 'scanner-app') {
-                dropdownId = 'defaultScanner';
-            }
+            const formToDropdownMap = {
+                'dashboard': 'defaultDashboard',
+                'truck-loading-chart': 'defaultTruckLoading',
+                'scanner-app': 'defaultScanner'
+            };
+            
+            const dropdownId = formToDropdownMap[formName];
+            if (!dropdownId) return;
             
             const printerId = document.getElementById(dropdownId).value;
             DataHub.setDefaultPrinter(formName, printerId);
             
-            const printerName = printerId ? DataHub.getPrinterById(printerId).name : 'None';
+            let printerName = 'None';
+            if (printerId) {
+                const printer = DataHub.getPrinterById(printerId);
+                printerName = printer ? printer.name : 'Unknown';
+            }
             alert(`✅ Default printer updated to: ${printerName}`);
         }
         

@@ -319,7 +319,7 @@ const DataHub = {
     // Print Job Logging (optional)
     logPrintJob: function(printerId, printerName, formName, userId = 'system') {
         const printJobs = this.getAllPrintJobs();
-        const jobId = 'job_' + Date.now();
+        const jobId = 'job_' + Date.now() + '_' + Math.random().toString(36).substring(2, 11);
         const job = {
             id: jobId,
             printerId: printerId,
@@ -338,6 +338,14 @@ const DataHub = {
     getAllPrintJobs: function() {
         const data = localStorage.getItem('printJobs');
         return data ? JSON.parse(data) : [];
+    },
+    
+    // Show print dialog with printer info
+    showPrintDialog: function(printer, formName) {
+        alert(`📄 Printing to: ${printer.name} (${printer.networkPath})\n\n` +
+              `Note: Direct network printing requires a backend print server. ` +
+              `The browser print dialog will open. Please select your printer manually.`);
+        window.print();
     },
     
     // Statistics

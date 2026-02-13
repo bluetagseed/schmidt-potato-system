@@ -658,13 +658,8 @@
             // Log print job
             DataHub.logPrintJob(printer.id, printer.name, 'scanner-app');
             
-            // Note to user about network printing
-            alert(`📄 Printing to: ${printer.name} (${printer.networkPath})\n\n` +
-                  `Note: Direct network printing requires a backend print server. ` +
-                  `The browser print dialog will open. Please select your printer manually.`);
-            
-            // Trigger browser print dialog
-            window.print();
+            // Show print dialog and trigger print
+            DataHub.showPrintDialog(printer, 'scanner-app');
         });
         
         // Load data on page load
