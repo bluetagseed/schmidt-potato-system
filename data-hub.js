@@ -343,6 +343,11 @@ const DataHub = {
         const printer = this.getPrinterById(printerId);
         const formDisplayName = this.getFormDisplayName(formKey);
         
+        if (!printer) {
+            alert(`Error: Printer not found`);
+            return;
+        }
+        
         alert(`Default printer saved: ${printer.name} for ${formDisplayName}`);
     },
     
