@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Schmidt Potato System - Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -183,6 +184,79 @@
             color: white;
         }
         
+        .driver-checkin-section {
+            background: #f0f8ff;
+            border: 2px solid #1e3c72;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .qr-container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        
+        #qr-truck-loading {
+            display: inline-block;
+            margin: 20px auto;
+        }
+        
+        .qr-container h3 {
+            color: #1e3c72;
+            margin: 20px 0 10px 0;
+            font-size: 1.5em;
+        }
+        
+        .qr-container p {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .qr-instructions {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .qr-instructions h4 {
+            color: #ff9800;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .qr-instructions ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        .qr-instructions li {
+            margin-bottom: 8px;
+        }
+        
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-qr, #printable-qr * {
+                visibility: visible;
+            }
+            #printable-qr {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        
         @media (max-width: 768px) {
             .app-grid {
                 grid-template-columns: 1fr;
@@ -221,6 +295,27 @@
                 <div class="stat-card">
                     <div class="stat-value" id="totalLabels">0</div>
                     <div class="stat-label">Labels Generated</div>
+                </div>
+            </div>
+            
+            <!-- Driver Check-In QR Code -->
+            <div class="section-title">🚛 Driver Check-In</div>
+            <div class="driver-checkin-section">
+                <div class="qr-container">
+                    <div id="qr-truck-loading"></div>
+                    <h3>📱 Truck Loading Chart</h3>
+                    <p>Drivers: Scan this code with your phone camera to quickly access the Truck Loading Chart. No app installation needed - just point your camera at the code!</p>
+                    <button class="btn btn-success" onclick="printTruckQR()">🖨️ Print QR Code</button>
+                </div>
+                <div class="qr-instructions">
+                    <h4>📋 Setup Instructions:</h4>
+                    <ol>
+                        <li><strong>Scan the QR code</strong> above with your phone's camera (iPhone or Android)</li>
+                        <li><strong>Tap the notification</strong> that appears to open the Truck Loading Chart</li>
+                        <li><strong>Add to Home Screen</strong> for quick access (see instructions below)</li>
+                        <li><strong>Use it daily</strong> to track truck loading in real-time</li>
+                    </ol>
+                    <p style="margin-top: 15px;"><strong>💡 Tip:</strong> Print this QR code and post it in the loading area for easy driver access!</p>
                 </div>
             </div>
             
@@ -508,6 +603,233 @@
         // Initialize
         updateStats();
         loadPrinterDropdown();
+        
+        // Generate QR code for Truck Loading Chart
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(document.getElementById("qr-truck-loading"), {
+                text: "https://bluetagseed.github.io/schmidt-potato-system/truck-loading-chart.html",
+                width: 200,
+                height: 200,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // Print Truck QR Code
+        function printTruckQR() {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Schmidt Potato Truck Check-In QR Code</title>
+    <style>
+        @page {
+            size: letter portrait;
+            margin: 0.5in;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            padding: 20px;
+            max-width: 7.5in;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 4px solid #000;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .company-name {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        
+        .company-info {
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .title {
+            font-size: 42px;
+            font-weight: bold;
+            text-align: center;
+            margin: 30px 0;
+            letter-spacing: 1px;
+        }
+        
+        .qr-section {
+            text-align: center;
+            margin: 40px 0;
+            padding: 40px;
+            border: 3px solid #000;
+            border-radius: 8px;
+        }
+        
+        .qr-code {
+            display: inline-block;
+            margin: 20px auto;
+        }
+        
+        .scan-instruction {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 30px 0 20px 0;
+            text-align: center;
+        }
+        
+        .instructions {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        
+        .instructions h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .instructions ol {
+            margin-left: 25px;
+            font-size: 16px;
+            line-height: 2;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .home-screen-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #666;
+            border-radius: 8px;
+        }
+        
+        .home-screen-section h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .platform {
+            margin: 15px 0;
+        }
+        
+        .platform strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .platform ul {
+            margin-left: 25px;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #000;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        @media print {
+            body {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">SCHMIDT POTATO TRUCK CHECK-IN</div>
+        <div class="company-info">Sabin, MN | 218-493-4254</div>
+    </div>
+    
+    <div class="title">🚛 TRUCK LOADING CHART</div>
+    
+    <div class="qr-section">
+        <div class="qr-code" id="print-qr-code"></div>
+        <div class="scan-instruction">📱 SCAN TO START LOADING</div>
+    </div>
+    
+    <div class="instructions">
+        <h3>HOW TO USE:</h3>
+        <ol>
+            <li><strong>Open your phone's camera app</strong> (iPhone or Android)</li>
+            <li><strong>Point the camera at the QR code</strong> above</li>
+            <li><strong>Tap the notification</strong> that appears on your screen</li>
+            <li><strong>Begin loading your truck</strong> using the interactive chart</li>
+        </ol>
+    </div>
+    
+    <div class="home-screen-section">
+        <h3>📲 ADD TO HOME SCREEN FOR QUICK ACCESS:</h3>
+        
+        <div class="platform">
+            <strong>iPhone (Safari):</strong>
+            <ul>
+                <li>Tap the Share button (box with arrow)</li>
+                <li>Scroll down and tap "Add to Home Screen"</li>
+                <li>Tap "Add" in the top right corner</li>
+            </ul>
+        </div>
+        
+        <div class="platform">
+            <strong>Android (Chrome):</strong>
+            <ul>
+                <li>Tap the menu (three dots) in the top right</li>
+                <li>Tap "Add to Home screen"</li>
+                <li>Tap "Add" to confirm</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p><strong>Questions? Contact us:</strong></p>
+        <p>Schmidt Potato | 9036 70th St S, Sabin, MN 56580</p>
+        <p>Phone: 218-493-4254</p>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        // Generate large QR code for print
+        new QRCode(document.getElementById("print-qr-code"), {
+            text: "https://bluetagseed.github.io/schmidt-potato-system/truck-loading-chart.html",
+            width: 288,
+            height: 288,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        // Auto-print after QR code generation
+        setTimeout(function() {
+            window.print();
+        }, 500);
+    <` + `/script>
+</body>
+</html>`);
+            printWindow.document.close();
+        }
         
         // Auto-refresh stats every 30 seconds
         setInterval(updateStats, 30000);
