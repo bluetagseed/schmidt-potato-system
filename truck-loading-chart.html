@@ -1010,6 +1010,7 @@
                 const driverName = urlParams.get('driver') || '';
                 const truckNumber = urlParams.get('truck') || '';
                 const driverPhone = urlParams.get('phone') || '';
+                const customerPO = urlParams.get('po') || '';
                 
                 // Fill truck name/number field
                 const truckNameInput = document.getElementById('truckName');
@@ -1032,6 +1033,12 @@
                 const driverPhoneInput = document.getElementById('driverPhone');
                 if (driverPhoneInput && driverPhone) {
                     driverPhoneInput.value = driverPhone;
+                }
+                
+                // Fill customer PO# field
+                const customerPOInput = document.getElementById('customerPO');
+                if (customerPOInput && customerPO) {
+                    customerPOInput.value = customerPO;
                 }
                 
                 // Set current date automatically (if date input exists and is empty)
