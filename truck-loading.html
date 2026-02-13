@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truck Loading - Scan Pallets</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .driver-info {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .driver-info h2 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .scan-section {
+            margin: 30px 0;
+        }
+        
+        .scan-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.1em;
+            border: 2px solid #1e3c72;
+            border-radius: 8px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(17, 153, 142, 0.3);
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .pallet-list {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .pallet-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #11998e;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .pallet-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .pallet-id {
+            font-weight: 600;
+            color: #1e3c72;
+            margin-bottom: 5px;
+        }
+        
+        .pallet-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .count-badge {
+            background: #11998e;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            .scan-input {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚛 Truck Loading</h1>
+            <p>Scan pallets as they are loaded</p>
+        </div>
+        
+        <div class="content">
+            <!-- Driver Info Summary -->
+            <div class="driver-info">
+                <h2>Driver Information</h2>
+                <div class="info-row">
+                    <span class="info-label">Driver Name:</span>
+                    <span class="info-value" id="driverName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone:</span>
+                    <span class="info-value" id="driverPhone">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Truck/Plate:</span>
+                    <span class="info-value" id="truckPlate">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Company:</span>
+                    <span class="info-value" id="companyName">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Load Number:</span>
+                    <span class="info-value" id="loadNumber">-</span>
+                </div>
+            </div>
+            
+            <!-- Alert Messages -->
+            <div class="alert success" id="successAlert">Pallet scanned successfully!</div>
+            <div class="alert error" id="errorAlert">Error scanning pallet</div>
+            
+            <!-- Scan Section -->
+            <div class="scan-section">
+                <h2>Scan Pallets</h2>
+                <div class="scan-input">
+                    <input type="text" id="palletInput" placeholder="Scan or enter pallet barcode/QR code" autofocus>
+                    <button class="btn btn-primary" onclick="scanPallet()">Add Pallet</button>
+                </div>
+            </div>
+            
+            <!-- Loaded Pallets -->
+            <div>
+                <h2>Loaded Pallets</h2>
+                <div class="count-badge">
+                    <span id="palletCount">0</span> Pallets Loaded
+                </div>
+                <div class="pallet-list" id="palletList">
+                    <div class="empty-state">No pallets scanned yet. Start scanning to add pallets to this load.</div>
+                </div>
+            </div>
+            
+            <!-- Complete Loading Button -->
+            <button class="btn btn-success" onclick="completeLoading()">✓ Complete Loading & Generate BOL</button>
+        </div>
+    </div>
+
+    <script>
+        // Get shipment ID from URL or localStorage
+        const urlParams = new URLSearchParams(window.location.search);
+        const shipmentID = urlParams.get('shipmentID') || localStorage.getItem('currentShipmentID');
+        
+        let loadedPallets = [];
+        
+        // Load driver info
+        function loadDriverInfo() {
+            const shipmentData = localStorage.getItem(`shipment-${shipmentID}`);
+            if (shipmentData) {
+                const data = JSON.parse(shipmentData);
+                document.getElementById('driverName').textContent = data.driverName || '-';
+                document.getElementById('driverPhone').textContent = data.phoneNumber || '-';
+                document.getElementById('truckPlate').textContent = data.truckPlate || '-';
+                document.getElementById('companyName').textContent = data.companyName || '-';
+                document.getElementById('loadNumber').textContent = data.loadNumber || '-';
+            }
+            
+            // Load existing pallets if any
+            const savedPallets = localStorage.getItem(`pallets-${shipmentID}`);
+            if (savedPallets) {
+                loadedPallets = JSON.parse(savedPallets);
+                updatePalletList();
+            }
+        }
+        
+        // Scan pallet
+        function scanPallet() {
+            const input = document.getElementById('palletInput');
+            const palletCode = input.value.trim();
+            
+            if (!palletCode) {
+                showAlert('error', 'Please enter a pallet code');
+                return;
+            }
+            
+            // Add pallet to list
+            const pallet = {
+                id: palletCode,
+                scannedAt: new Date().toISOString(),
+                timestamp: new Date().toLocaleString()
+            };
+            
+            loadedPallets.push(pallet);
+            
+            // Save to localStorage
+            localStorage.setItem(`pallets-${shipmentID}`, JSON.stringify(loadedPallets));
+            
+            // Update display
+            updatePalletList();
+            
+            // Show success
+            showAlert('success', 'Pallet added successfully!');
+            
+            // Clear input
+            input.value = '';
+            input.focus();
+        }
+        
+        // Update pallet list display
+        function updatePalletList() {
+            const listContainer = document.getElementById('palletList');
+            const countBadge = document.getElementById('palletCount');
+            
+            countBadge.textContent = loadedPallets.length;
+            
+            if (loadedPallets.length === 0) {
+                listContainer.innerHTML = '<div class="empty-state">No pallets scanned yet. Start scanning to add pallets to this load.</div>';
+                return;
+            }
+            
+            listContainer.innerHTML = loadedPallets.map((pallet, index) => `
+                <div class="pallet-item">
+                    <div class="pallet-id">Pallet #${index + 1}: ${pallet.id}</div>
+                    <div class="pallet-details">Scanned at: ${pallet.timestamp}</div>
+                </div>
+            `).join('');
+        }
+        
+        // Show alert
+        function showAlert(type, message) {
+            const alertId = type === 'success' ? 'successAlert' : 'errorAlert';
+            const alert = document.getElementById(alertId);
+            alert.textContent = message;
+            alert.style.display = 'block';
+            
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Complete loading
+        function completeLoading() {
+            if (loadedPallets.length === 0) {
+                showAlert('error', 'Please scan at least one pallet before completing');
+                return;
+            }
+            
+            if (confirm(`Complete loading with ${loadedPallets.length} pallets?`)) {
+                // Redirect to BOL signature page
+                window.location.href = `bol-signature.html?shipmentID=${shipmentID}`;
+            }
+        }
+        
+        // Allow Enter key to scan
+        document.getElementById('palletInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                scanPallet();
+            }
+        });
+        
+        // Initialize
+        loadDriverInfo();
+    </script>
+</body>
+</html>
