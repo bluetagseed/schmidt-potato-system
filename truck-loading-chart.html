@@ -640,6 +640,18 @@
             <div class="back-button-container">
                 <a href="dashboard.html" class="back-button">🏠 Back to Dashboard</a>
             </div>
+            
+            <!-- Printer Selection & Print Button -->
+            <div class="section-card" style="background: #fff3e0; border-color: #1e3c72;">
+                <div class="section-title">🖨️ Printer Selection</div>
+                <div class="form-group">
+                    <label for="truckLoadingPrinterSelect">Select Printer:</label>
+                    <select id="truckLoadingPrinterSelect">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                </div>
+                <button onclick="printLoadingChart()" class="success">🖨️ Print Loading Sheet</button>
+            </div>
 
             <!-- Section 2: Customer Selection -->
             <div class="section-card">
@@ -973,6 +985,7 @@
         </div>
     </div>
 
+    <script src="data-hub.js"></script>
     <script>
         // Global State
         let truckConfig = {
@@ -993,6 +1006,7 @@
             loadTrucksList();
             loadCustomersList();
             updateRowDisplay();
+            loadPrinterDropdown();
 
             // Auto-focus on scan input when loading screen is shown
             document.getElementById('scanInput').addEventListener('keypress', function(e) {
@@ -1910,6 +1924,62 @@
                     </div>
                 `;
             }).join('');
+        }
+        
+        // Load printer dropdown
+        function loadPrinterDropdown() {
+            const printers = DataHub.getActivePrinters();
+            const dropdown = document.getElementById('truckLoadingPrinterSelect');
+            
+            // Clear existing options except first
+            dropdown.innerHTML = '<option value="">-- Select Printer --</option>';
+            
+            // Add printer options
+            printers.forEach(printer => {
+                const option = document.createElement('option');
+                option.value = printer.id;
+                option.textContent = `${printer.name} (${printer.type})`;
+                dropdown.appendChild(option);
+            });
+            
+            // Set default or last used printer
+            const lastUsed = localStorage.getItem('lastPrinter_truck-loading-chart');
+            const defaultPrinter = DataHub.getDefaultPrinter('truck-loading-chart');
+            
+            if (lastUsed) {
+                dropdown.value = lastUsed;
+            } else if (defaultPrinter) {
+                dropdown.value = defaultPrinter;
+            }
+            
+            // Save selection to localStorage
+            dropdown.addEventListener('change', function() {
+                if (this.value) {
+                    localStorage.setItem('lastPrinter_truck-loading-chart', this.value);
+                }
+            });
+        }
+        
+        // Print loading chart
+        function printLoadingChart() {
+            const selectedPrinterId = document.getElementById('truckLoadingPrinterSelect').value;
+            
+            if (!selectedPrinterId) {
+                alert('Please select a printer first.');
+                return;
+            }
+            
+            const printer = DataHub.getPrinterById(selectedPrinterId);
+            if (!printer) {
+                alert('Selected printer not found.');
+                return;
+            }
+            
+            // Log print job
+            DataHub.logPrintJob(printer.id, printer.name, 'truck-loading-chart');
+            
+            // Show print dialog and trigger print
+            DataHub.showPrintDialog(printer, 'truck-loading-chart');
         }
     </script>
 </body>

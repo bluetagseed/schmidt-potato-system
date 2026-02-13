@@ -366,8 +366,23 @@
                 </button>
             </div>
         </div>
+        
+        <!-- Printer Selection & Print Section -->
+        <div class="card">
+            <h2>🖨️ Print Scan Report</h2>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="scannerPrinterSelect" style="display: block; margin-bottom: 8px; font-weight: 600; color: #2c3e50;">Select Printer:</label>
+                <select id="scannerPrinterSelect" style="width: 100%; padding: 12px; border: 2px solid #667eea; border-radius: 8px; font-size: 1em;">
+                    <option value="">-- Select Printer --</option>
+                </select>
+            </div>
+            <button id="printBtn" class="btn-primary">
+                🖨️ Print Scan Report
+            </button>
+        </div>
     </div>
     
+    <script src="data-hub.js"></script>
     <script>
         // Scanned items array
         let scannedItems = [];
@@ -591,9 +606,66 @@
             reader.readAsText(file);
         });
         
+        // Load printer dropdown
+        function loadPrinterDropdown() {
+            const printers = DataHub.getActivePrinters();
+            const dropdown = document.getElementById('scannerPrinterSelect');
+            
+            // Clear existing options except first
+            dropdown.innerHTML = '<option value="">-- Select Printer --</option>';
+            
+            // Add printer options
+            printers.forEach(printer => {
+                const option = document.createElement('option');
+                option.value = printer.id;
+                option.textContent = `${printer.name} (${printer.type})`;
+                dropdown.appendChild(option);
+            });
+            
+            // Set default or last used printer
+            const lastUsed = localStorage.getItem('lastPrinter_scanner-app');
+            const defaultPrinter = DataHub.getDefaultPrinter('scanner-app');
+            
+            if (lastUsed) {
+                dropdown.value = lastUsed;
+            } else if (defaultPrinter) {
+                dropdown.value = defaultPrinter;
+            }
+            
+            // Save selection to localStorage
+            dropdown.addEventListener('change', function() {
+                if (this.value) {
+                    localStorage.setItem('lastPrinter_scanner-app', this.value);
+                }
+            });
+        }
+        
+        // Print scan report
+        document.getElementById('printBtn').addEventListener('click', function() {
+            const selectedPrinterId = document.getElementById('scannerPrinterSelect').value;
+            
+            if (!selectedPrinterId) {
+                alert('Please select a printer first.');
+                return;
+            }
+            
+            const printer = DataHub.getPrinterById(selectedPrinterId);
+            if (!printer) {
+                alert('Selected printer not found.');
+                return;
+            }
+            
+            // Log print job
+            DataHub.logPrintJob(printer.id, printer.name, 'scanner-app');
+            
+            // Show print dialog and trigger print
+            DataHub.showPrintDialog(printer, 'scanner-app');
+        });
+        
         // Load data on page load
         window.addEventListener('DOMContentLoaded', () => {
             loadScannedItems();
+            loadPrinterDropdown();
             document.getElementById('barcodeInput').focus();
         });
     </script>
