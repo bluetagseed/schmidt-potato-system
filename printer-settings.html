@@ -809,7 +809,7 @@
                 lpt: {
                     label: 'LPT Port *',
                     placeholder: 'LPT1',
-                    helper: 'Example: LPT1 or LPT2'
+                    helper: 'Example: LPT1, LPT2, or LPT3'
                 }
             };
             
@@ -822,10 +822,10 @@
         // Validate connection path based on type
         function validateConnectionPath(connectionType, path) {
             const patterns = {
-                network: /^\\\\[\w\d\.\-]+\\[\w\d\.\-]+$/,  // \\SERVER\Printer or \\IP\Printer
+                network: /^\\\\[\w\d\.\-_]+\\[\w\d\.\-_]+$/,  // \\SERVER\Printer or \\IP\Printer (allows underscores)
                 usb: /^USB\d{3}$/i,  // USB001, USB002, etc.
                 com: /^COM\d{1,2}$/i,  // COM1 through COM99
-                lpt: /^LPT[1-2]$/i  // LPT1 or LPT2
+                lpt: /^LPT[1-3]$/i  // LPT1, LPT2, or LPT3
             };
             
             const pattern = patterns[connectionType];
@@ -864,13 +864,12 @@
         initPage();
         
         // Add event listener for connection type changes
-        document.addEventListener('DOMContentLoaded', function() {
-            const connectionTypeSelect = document.getElementById('connectionType');
-            if (connectionTypeSelect) {
-                connectionTypeSelect.addEventListener('change', updatePathFieldForConnectionType);
-                updatePathFieldForConnectionType(); // Set initial state
-            }
-        });
+        // Since script is at bottom of body, DOM is already loaded
+        const connectionTypeSelect = document.getElementById('connectionType');
+        if (connectionTypeSelect) {
+            connectionTypeSelect.addEventListener('change', updatePathFieldForConnectionType);
+            updatePathFieldForConnectionType(); // Set initial state
+        }
     </script>
 </body>
 </html>
