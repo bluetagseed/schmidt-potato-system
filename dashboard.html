@@ -1,35 +1,516 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="styles.css">
-    <title>Schmidt Potato System</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schmidt Potato System - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.3em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section-title {
+            font-size: 1.8em;
+            color: #1e3c72;
+            margin: 30px 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #1e3c72;
+        }
+        
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .app-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+        }
+        
+        .app-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .app-card.warehouse {
+            background: linear-gradient(135deg, #f46b45 0%, #eea849 100%);
+        }
+        
+        .app-card.shipping {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        
+        .app-card.loading {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+        
+        .app-card.labels {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .app-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .app-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .app-description {
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: #f5f5ff;
+            border: 2px solid #1e3c72;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #1e3c72;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 1em;
+        }
+        
+        .export-section {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px 10px 10px 0;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(30, 60, 114, 0.3);
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ff9800;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ff4444;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Welcome to Schmidt Potato System</h1>
-    </header>
-    <main class="app-grid">
-        <section class="shipping-loading">
-            <h2>Shipping & Loading</h2>
-            <div class="app-card shipping">
-                <div class="app-icon">🚚</div>
-                <div class="app-title">Driver Check-In & BOL</div>
-                <div class="app-description">Driver information capture with digital signature and BOL workflow</div>
+    <div class="container">
+        <div class="header">
+            <h1>🥔 Schmidt Potato System</h1>
+            <p>Integrated Warehouse & Shipping Management</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Sabin, MN 56580 | 218-493-4254</p>
+        </div>
+        
+        <div class="content">
+            
+            <!-- Statistics Overview -->
+            <div class="section-title">📊 System Overview</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPallets">0</div>
+                    <div class="stat-label">Total Pallets</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPickLists">0</div>
+                    <div class="stat-label">Pick Lists</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalTrucks">0</div>
+                    <div class="stat-label">Trucks Loaded</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalLabels">0</div>
+                    <div class="stat-label">Labels Generated</div>
+                </div>
             </div>
-            <div class="app-card truck-loading-chart">
-                <div class="app-icon">📦</div>
-                <div class="app-title">Truck Loading Chart</div>
-                <div class="app-description">Overview of truck loading status</div>
+            
+            <!-- Warehouse Operations -->
+            <div class="section-title">📦 Warehouse Operations</div>
+            <div class="app-grid">
+                <a href="pick-list.html" class="app-card warehouse">
+                    <div class="app-icon">📋</div>
+                    <div class="app-title">Pick List Generator</div>
+                    <div class="app-description">Create warehouse pick lists for customer orders with smart product merging</div>
+                </a>
+                
+                <a href="scanner-app.html" class="app-card warehouse">
+                    <div class="app-icon">📱</div>
+                    <div class="app-title">Scanner App</div>
+                    <div class="app-description">Mobile scanning app for warehouse pickers with Eyoyo scanner support</div>
+                </a>
+                
+                <a href="pallet-packing.html" class="app-card warehouse">
+                    <div class="app-icon">📦</div>
+                    <div class="app-title">Pallet Packing Label</div>
+                    <div class="app-description">Generate internal packing labels with auto-incrementing IDs and SSCC</div>
+                </a>
             </div>
-            <div class="app-card bill-of-lading">
-                <div class="app-icon">📝</div>
-                <div class="app-title">Bill of Lading</div>
-                <div class="app-description">Generate and manage Bill of Lading documents</div>
+            
+            <!-- Label Generation -->
+            <div class="section-title">🏷️ Label Generation</div>
+            <div class="app-grid">
+                <a href="PTI.html" class="app-card labels">
+                    <div class="app-icon">🏷️</div>
+                    <div class="app-title">PTI Case Labels</div>
+                    <div class="app-description">Generate PTI-compliant case labels with smart PLU/UPC learning</div>
+                </a>
+                
+                <a href="pallet-shipping.html" class="app-card labels">
+                    <div class="app-icon">🚚</div>
+                    <div class="app-title">Pallet Shipping Label</div>
+                    <div class="app-description">Create customer shipping labels with delivery information</div>
+                </a>
             </div>
-        </section>
-    </main>
-    <script src="scripts.js"></script>
+            
+            <!-- Shipping & Loading -->
+            <div class="section-title">🚛 Shipping & Loading</div>
+            <div class="app-grid">
+                <a href="truck-loading-chart.html" class="app-card loading">
+                    <div class="app-icon">🚛</div>
+                    <div class="app-title">Truck Loading Chart</div>
+                    <div class="app-description">Live truck loading tracker with visual pallet placement map</div>
+                </a>
+                <a href="driver-checkin.html" class="app-card shipping">
+    <div class="app-icon">🚚</div>
+    <div class="app-title">Driver Check-In & BOL</div>
+    <div class="app-description">Driver information capture with digital signature and BOL workflow</div>
+</a>
+                <a href="bol.html" class="app-card shipping">
+                    <div class="app-icon">📄</div>
+                    <div class="app-title">Bill of Lading</div>
+                    <div class="app-description">Generate BOL with mobile signature capture integration</div>
+                </a>
+            </div>
+            
+            <!-- System Settings -->
+            <div class="section-title">⚙️ System Settings</div>
+            <div class="app-grid">
+                <a href="printer-settings.html" class="app-card labels">
+                    <div class="app-icon">🖨️</div>
+                    <div class="app-title">Printer Settings</div>
+                    <div class="app-description">Configure printers and set default printer assignments for each form</div>
+                </a>
+            </div>
+            
+            <!-- Data Export & Management -->
+            <div class="section-title">💾 Data Management</div>
+            <div class="export-section">
+                <h3 style="margin-bottom: 20px; color: #ff9800;">📊 Export & Traceability</h3>
+                <p style="margin-bottom: 20px;">Export all system data to Excel for record-keeping and traceability compliance.</p>
+                
+                <button class="btn btn-success" onclick="exportAllData()">📥 Export All Data to Excel</button>
+                <button class="btn btn-warning" onclick="exportPallets()">📦 Export Pallets Only</button>
+                <button class="btn btn-warning" onclick="exportPickLists()">📋 Export Pick Lists Only</button>
+                <button class="btn btn-warning" onclick="exportTrucks()">🚛 Export Trucks Only</button>
+                <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+            
+            <!-- Printer & Print Section -->
+            <div class="section-title">🖨️ Print Dashboard Report</div>
+            <div class="export-section">
+                <h3 style="margin-bottom: 20px; color: #1e3c72;">Print Dashboard Summary</h3>
+                <div style="margin-bottom: 20px;">
+                    <label for="dashboardPrinterSelect" style="font-weight: 600; margin-bottom: 10px; display: block;">🖨️ Select Printer:</label>
+                    <select id="dashboardPrinterSelect" style="padding: 10px; font-size: 1em; border-radius: 8px; border: 2px solid #1e3c72; width: 100%; max-width: 400px;">
+                        <option value="">-- Select Printer --</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="printDashboard()">🖨️ Print Dashboard Report</button>
+            </div>
+            
+            <!-- System Information -->
+            <div class="section-title">ℹ️ System Information</div>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 12px;">
+                <p><strong>Company:</strong> Schmidt Potato</p>
+                <p><strong>Location:</strong> 9036 70th St S, Sabin, MN 56580</p>
+                <p><strong>Phone:</strong> 218-493-4254</p>
+                <p><strong>System Version:</strong> 1.0.0</p>
+                <p><strong>Last Updated:</strong> <span id="lastUpdated">-</span></p>
+            </div>
+            
+        </div>
+    </div>
+
+    <script src="data-hub.js"></script>
+    <script>
+        // Load printer dropdown
+        function loadPrinterDropdown() {
+            const printers = DataHub.getActivePrinters();
+            const dropdown = document.getElementById('dashboardPrinterSelect');
+            
+            // Clear existing options except first
+            dropdown.innerHTML = '<option value="">-- Select Printer --</option>';
+            
+            // Add printer options
+            printers.forEach(printer => {
+                const option = document.createElement('option');
+                option.value = printer.id;
+                option.textContent = `${printer.name} (${printer.type})`;
+                dropdown.appendChild(option);
+            });
+            
+            // Set default or last used printer
+            const lastUsed = localStorage.getItem('lastPrinter_dashboard');
+            const defaultPrinter = DataHub.getDefaultPrinter('dashboard');
+            
+            if (lastUsed) {
+                dropdown.value = lastUsed;
+            } else if (defaultPrinter) {
+                dropdown.value = defaultPrinter;
+            }
+            
+            // Save selection to localStorage
+            dropdown.addEventListener('change', function() {
+                if (this.value) {
+                    localStorage.setItem('lastPrinter_dashboard', this.value);
+                }
+            });
+        }
+        
+        // Print dashboard report
+        function printDashboard() {
+            const selectedPrinterId = document.getElementById('dashboardPrinterSelect').value;
+            
+            if (!selectedPrinterId) {
+                alert('Please select a printer first.');
+                return;
+            }
+            
+            const printer = DataHub.getPrinterById(selectedPrinterId);
+            if (!printer) {
+                alert('Selected printer not found.');
+                return;
+            }
+            
+            // Log print job
+            DataHub.logPrintJob(printer.id, printer.name, 'dashboard');
+            
+            // Show print dialog and trigger print
+            DataHub.showPrintDialog(printer, 'dashboard');
+        }
+        
+        // Update statistics on load
+        function updateStats() {
+            const stats = DataHub.getStatistics();
+            document.getElementById('totalPallets').textContent = stats.totalPallets;
+            document.getElementById('totalPickLists').textContent = stats.totalPickLists;
+            document.getElementById('totalTrucks').textContent = stats.totalTrucks;
+            document.getElementById('totalLabels').textContent = stats.totalLabels;
+            
+            const lastUpdated = localStorage.getItem('lastSystemUpdate') || 'Never';
+            document.getElementById('lastUpdated').textContent = lastUpdated;
+        }
+        
+        // Export all data to Excel
+        function exportAllData() {
+            if (!confirm('Export all system data to Excel?')) return;
+            
+            const wb = XLSX.utils.book_new();
+            
+            // Export pallets
+            const pallets = DataHub.getAllPallets();
+            if (pallets.length > 0) {
+                const ws1 = XLSX.utils.json_to_sheet(pallets);
+                XLSX.utils.book_append_sheet(wb, ws1, 'Pallets');
+            }
+            
+            // Export pick lists
+            const pickLists = DataHub.getAllPickLists();
+            if (pickLists.length > 0) {
+                const ws2 = XLSX.utils.json_to_sheet(pickLists);
+                XLSX.utils.book_append_sheet(wb, ws2, 'Pick Lists');
+            }
+            
+            // Export trucks
+            const trucks = DataHub.getAllTrucks();
+            if (trucks.length > 0) {
+                const ws3 = XLSX.utils.json_to_sheet(trucks);
+                XLSX.utils.book_append_sheet(wb, ws3, 'Trucks');
+            }
+            
+            // Export labels
+            const labels = DataHub.getAllLabels();
+            if (labels.length > 0) {
+                const ws4 = XLSX.utils.json_to_sheet(labels);
+                XLSX.utils.book_append_sheet(wb, ws4, 'Labels');
+            }
+            
+            const filename = 'schmidt_potato_data_' + new Date().toISOString().split('T')[0] + '.xlsx';
+            XLSX.writeFile(wb, filename);
+            
+            alert('✅ Data exported successfully to ' + filename);
+        }
+        
+        // Export pallets only
+        function exportPallets() {
+            const pallets = DataHub.getAllPallets();
+            if (pallets.length === 0) {
+                alert('No pallet data to export');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(pallets);
+            XLSX.utils.book_append_sheet(wb, ws, 'Pallets');
+            
+            const filename = 'pallets_' + new Date().toISOString().split('T')[0] + '.xlsx';
+            XLSX.writeFile(wb, filename);
+            
+            alert('✅ Pallets exported to ' + filename);
+        }
+        
+        // Export pick lists only
+        function exportPickLists() {
+            const pickLists = DataHub.getAllPickLists();
+            if (pickLists.length === 0) {
+                alert('No pick list data to export');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(pickLists);
+            XLSX.utils.book_append_sheet(wb, ws, 'Pick Lists');
+            
+            const filename = 'picklists_' + new Date().toISOString().split('T')[0] + '.xlsx';
+            XLSX.writeFile(wb, filename);
+            
+            alert('✅ Pick lists exported to ' + filename);
+        }
+        
+        // Export trucks only
+        function exportTrucks() {
+            const trucks = DataHub.getAllTrucks();
+            if (trucks.length === 0) {
+                alert('No truck data to export');
+                return;
+            }
+            
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(trucks);
+            XLSX.utils.book_append_sheet(wb, ws, 'Trucks');
+            
+            const filename = 'trucks_' + new Date().toISOString().split('T')[0] + '.xlsx';
+            XLSX.writeFile(wb, filename);
+            
+            alert('✅ Trucks exported to ' + filename);
+        }
+        
+        // Clear all data
+        function clearAllData() {
+            if (!confirm('⚠️ WARNING: This will delete ALL system data!\n\nAre you absolutely sure?')) return;
+            if (!confirm('This action CANNOT be undone! Continue?')) return;
+            
+            DataHub.clearAll();
+            updateStats();
+            alert('✅ All data cleared');
+        }
+        
+        // Initialize
+        updateStats();
+        loadPrinterDropdown();
+        
+        // Auto-refresh stats every 30 seconds
+        setInterval(updateStats, 30000);
+    </script>
 </body>
 </html>
