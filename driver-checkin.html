@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Driver Check-In</title>
+    <title>Driver Check-In - Schmidt Potato</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -13,262 +14,446 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             padding: 20px;
         }
         
         .container {
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
             text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
         }
         
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            color: #1e3c72;
+            font-size: 2em;
+            margin-bottom: 5px;
         }
         
-        .content {
+        .header p {
+            color: #666;
+            font-size: 0.9em;
+        }
+        
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #1e3c72;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        
+        .home-btn:hover {
+            background: #2a5298;
+        }
+        
+        .form-card {
+            background: white;
+            border-radius: 12px;
             padding: 40px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .form-card h2 {
+            color: #1e3c72;
+            margin-bottom: 25px;
+            font-size: 1.5em;
         }
         
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         
         label {
             display: block;
             font-weight: 600;
-            color: #333;
             margin-bottom: 8px;
-            font-size: 1.1em;
+            color: #333;
         }
         
-        input[type="text"],
-        input[type="tel"],
-        input[type="number"] {
+        input {
             width: 100%;
             padding: 12px;
-            font-size: 1em;
-            border: 2px solid #ddd;
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
+            font-size: 1em;
             transition: border-color 0.3s;
         }
         
         input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #1e3c72;
         }
         
-        .signature-section {
-            margin: 30px 0;
+        input.error {
+            border-color: #ff4444;
         }
         
-        .signature-pad {
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            background: white;
-            cursor: crosshair;
-            touch-action: none;
+        .error-message {
+            color: #ff4444;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .btn-start {
             width: 100%;
-            height: 200px;
-        }
-        
-        .signature-controls {
-            display: flex;
-            gap: 10px;
+            padding: 18px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
             margin-top: 10px;
         }
         
-        .btn {
-            padding: 15px 30px;
+        .btn-start:hover:not(:disabled) {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        }
+        
+        .btn-start:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .qr-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .qr-section h3 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        #qr-checkin {
+            display: inline-block;
+            margin: 20px auto;
+        }
+        
+        .btn-print {
+            padding: 12px 30px;
+            background: #1e3c72;
+            color: white;
             border: none;
             border-radius: 8px;
-            font-size: 1.1em;
+            font-size: 1em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
         }
         
-        .btn-secondary {
-            background: #666;
-            color: white;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            width: 100%;
-            margin-top: 20px;
-        }
-        
-        .btn:hover {
+        .btn-print:hover {
+            background: #2a5298;
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(30, 60, 114, 0.4);
         }
         
-        .btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
+        .instructions {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .instructions h3 {
+            color: #1e3c72;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #333;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        @media (max-width: 768px) {
+            .home-btn {
+                position: static;
+                display: block;
+                margin: 10px auto 0;
+                width: fit-content;
+            }
+            
+            .header {
+                padding-bottom: 60px;
+            }
+            
+            body {
+                padding: 10px;
+            }
+            
+            .form-card {
+                padding: 25px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🚚 Driver Check-In</h1>
-            <p>Please complete the form below</p>
+            <h1>🚛 Schmidt Potato</h1>
+            <p>Driver Check-In</p>
+            <a href="dashboard.html" class="home-btn">🏠 HOME</a>
         </div>
         
-        <div class="content">
+        <div class="form-card">
+            <h2>Driver Information</h2>
             <form id="checkinForm">
                 <div class="form-group">
                     <label for="driverName">Driver Name *</label>
-                    <input type="text" id="driverName" required>
+                    <input type="text" id="driverName" placeholder="Enter your full name" required>
+                    <div class="error-message" id="driverNameError">Please enter your name</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="truckNumber">Truck Number *</label>
+                    <input type="text" id="truckNumber" placeholder="Enter truck number" required>
+                    <div class="error-message" id="truckNumberError">Please enter truck number</div>
                 </div>
                 
                 <div class="form-group">
                     <label for="phoneNumber">Phone Number *</label>
-                    <input type="tel" id="phoneNumber" required>
+                    <input type="tel" id="phoneNumber" placeholder="701-555-1234" required>
+                    <div class="error-message" id="phoneNumberError">Please enter a valid phone number</div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="truckPlate">Truck/License Plate *</label>
-                    <input type="text" id="truckPlate" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="companyName">Company Name *</label>
-                    <input type="text" id="companyName" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="loadNumber">Load Number *</label>
-                    <input type="number" id="loadNumber" required>
-                </div>
-                
-                <div class="signature-section">
-                    <label>Digital Signature *</label>
-                    <canvas id="signaturePad" class="signature-pad"></canvas>
-                    <div class="signature-controls">
-                        <button type="button" class="btn btn-secondary" onclick="clearSignature()">Clear Signature</button>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" id="submitBtn" disabled>Continue to Loading</button>
+                <button type="submit" class="btn-start" id="startBtn">✅ Start Loading</button>
             </form>
+        </div>
+        
+        <div class="qr-section">
+            <h3>📱 Mobile Check-In QR Code</h3>
+            <div id="qr-checkin"></div>
+            <button class="btn-print" onclick="printQRCode()">🖨️ Print QR Code</button>
+        </div>
+        
+        <div class="instructions">
+            <h3>📱 For Drivers:</h3>
+            <ol>
+                <li>Scan QR code with your phone camera</li>
+                <li>Enter your name, truck number, and phone</li>
+                <li>Tap "Start Loading"</li>
+                <li>Begin scanning pallets</li>
+            </ol>
         </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('signaturePad');
-        const ctx = canvas.getContext('2d');
-        const submitBtn = document.getElementById('submitBtn');
-        let isDrawing = false;
-        let hasSigned = false;
-        
-        // Set canvas size
-        function resizeCanvas() {
-            const rect = canvas.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        
-        // Drawing functions
-        function startDrawing(e) {
-            isDrawing = true;
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
-            ctx.beginPath();
-            ctx.moveTo(x, y);
+        // Generate QR code
+        if (typeof QRCode !== 'undefined') {
+            new QRCode(document.getElementById("qr-checkin"), {
+                text: "https://bluetagseed.github.io/schmidt-potato-system/driver-checkin.html",
+                width: 300,
+                height: 300,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
         }
         
-        function draw(e) {
-            if (!isDrawing) return;
-            e.preventDefault();
+        // Phone number formatting
+        const phoneInput = document.getElementById('phoneNumber');
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
             
-            const rect = canvas.getBoundingClientRect();
-            const x = (e.clientX || e.touches[0].clientX) - rect.left;
-            const y = (e.clientY || e.touches[0].clientY) - rect.top;
+            if (value.length > 0) {
+                if (value.length <= 3) {
+                    value = value;
+                } else if (value.length <= 6) {
+                    value = value.slice(0, 3) + '-' + value.slice(3);
+                } else {
+                    value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+                }
+            }
             
-            ctx.lineTo(x, y);
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.stroke();
+            e.target.value = value;
+        });
+        
+        // Form validation
+        function validateForm() {
+            const driverName = document.getElementById('driverName').value.trim();
+            const truckNumber = document.getElementById('truckNumber').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
             
-            hasSigned = true;
-            submitBtn.disabled = false;
+            let isValid = true;
+            
+            // Validate driver name
+            if (!driverName) {
+                showError('driverName', 'Please enter your name');
+                isValid = false;
+            } else {
+                clearError('driverName');
+            }
+            
+            // Validate truck number
+            if (!truckNumber) {
+                showError('truckNumber', 'Please enter truck number');
+                isValid = false;
+            } else {
+                clearError('truckNumber');
+            }
+            
+            // Validate phone number
+            const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
+            if (!phoneNumber) {
+                showError('phoneNumber', 'Please enter your phone number');
+                isValid = false;
+            } else if (!phoneRegex.test(phoneNumber)) {
+                showError('phoneNumber', 'Please enter a valid phone number (XXX-XXX-XXXX)');
+                isValid = false;
+            } else {
+                clearError('phoneNumber');
+            }
+            
+            return isValid;
         }
         
-        function stopDrawing() {
-            isDrawing = false;
+        function showError(fieldId, message) {
+            const input = document.getElementById(fieldId);
+            const errorEl = document.getElementById(fieldId + 'Error');
+            input.classList.add('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
         }
         
-        // Mouse events
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
-        
-        // Touch events
-        canvas.addEventListener('touchstart', startDrawing);
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', stopDrawing);
-        
-        // Clear signature
-        function clearSignature() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            hasSigned = false;
-            submitBtn.disabled = true;
+        function clearError(fieldId) {
+            const input = document.getElementById(fieldId);
+            const errorEl = document.getElementById(fieldId + 'Error');
+            input.classList.remove('error');
+            errorEl.style.display = 'none';
         }
         
         // Form submission
         document.getElementById('checkinForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            if (!hasSigned) {
-                alert('Please sign before submitting');
+            if (!validateForm()) {
                 return;
             }
             
-            // Generate unique shipment ID
-            const shipmentID = Date.now();
+            const driverName = document.getElementById('driverName').value.trim();
+            const truckNumber = document.getElementById('truckNumber').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
             
-            // Get form data
-            const data = {
-                driverName: document.getElementById('driverName').value,
-                phoneNumber: document.getElementById('phoneNumber').value,
-                truckPlate: document.getElementById('truckPlate').value,
-                companyName: document.getElementById('companyName').value,
-                loadNumber: document.getElementById('loadNumber').value,
-                signature: canvas.toDataURL(),
-                checkinTime: new Date().toISOString()
-            };
+            // Build URL with parameters
+            const params = new URLSearchParams({
+                driver: driverName,
+                truck: truckNumber,
+                phone: phoneNumber,
+                checkin: 'true'
+            });
             
-            // Save to localStorage
-            localStorage.setItem(`shipment-${shipmentID}`, JSON.stringify(data));
-            localStorage.setItem('currentShipmentID', shipmentID);
-            
-            // Redirect to truck loading
-            window.location.href = `truck-loading.html?shipmentID=${shipmentID}`;
+            // Redirect to truck loading chart
+            window.location.href = `truck-loading-chart.html?${params.toString()}`;
         });
+        
+        // Print QR code function
+        function printQRCode() {
+            const printWindow = window.open('', '_blank');
+            const qrCodeImg = document.getElementById('qr-checkin').querySelector('img').src;
+            
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Schmidt Potato - Driver Check-In QR Code</title>
+                    <style>
+                        body { 
+                            font-family: Arial, sans-serif; 
+                            text-align: center; 
+                            padding: 40px;
+                        }
+                        .header {
+                            font-size: 24px;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                        }
+                        .subheader {
+                            font-size: 16px;
+                            margin-bottom: 30px;
+                            color: #666;
+                        }
+                        .qr-code {
+                            margin: 40px auto;
+                            width: 400px;
+                            height: 400px;
+                        }
+                        .instructions {
+                            margin-top: 40px;
+                            text-align: left;
+                            max-width: 600px;
+                            margin-left: auto;
+                            margin-right: auto;
+                        }
+                        .instructions h3 {
+                            margin-bottom: 15px;
+                        }
+                        .instructions ol {
+                            line-height: 1.8;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">SCHMIDT POTATO - DRIVER CHECK-IN</div>
+                    <div class="subheader">Sabin, MN 56580 | 218-493-4254</div>
+                    
+                    <div class="qr-code">
+                        <img src="${qrCodeImg}" width="400" height="400" />
+                    </div>
+                    
+                    <div class="instructions">
+                        <h3>📱 For Drivers:</h3>
+                        <ol>
+                            <li>Open your phone camera</li>
+                            <li>Point at the QR code above</li>
+                            <li>Tap the notification</li>
+                            <li>Enter your name, truck number, and phone</li>
+                            <li>Tap "Start Loading"</li>
+                            <li>Begin scanning pallets</li>
+                        </ol>
+                        <p style="margin-top: 20px;"><strong>Questions? Call 218-493-4254</strong></p>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => printWindow.print(), 500);
+        }
     </script>
 </body>
 </html>

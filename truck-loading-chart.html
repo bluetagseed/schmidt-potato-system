@@ -1001,8 +1001,51 @@
         let previousCustomerSelection = '';
         let previousTruckSelection = '';
 
+        // Load driver info from URL parameters (from driver check-in)
+        function loadDriverInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.has('checkin')) {
+                // Pre-fill driver info
+                const driverName = urlParams.get('driver') || '';
+                const truckNumber = urlParams.get('truck') || '';
+                const driverPhone = urlParams.get('phone') || '';
+                
+                // Fill truck name/number field
+                const truckNameInput = document.getElementById('truckName');
+                if (truckNameInput && truckNumber) {
+                    truckNameInput.value = truckNumber;
+                }
+                
+                const truckNumberInput = document.getElementById('truckNumber');
+                if (truckNumberInput && truckNumber) {
+                    truckNumberInput.value = truckNumber;
+                }
+                
+                // Fill driver name field
+                const driverNameInput = document.getElementById('driverName');
+                if (driverNameInput && driverName) {
+                    driverNameInput.value = driverName;
+                }
+                
+                // Fill driver phone field
+                const driverPhoneInput = document.getElementById('driverPhone');
+                if (driverPhoneInput && driverPhone) {
+                    driverPhoneInput.value = driverPhone;
+                }
+                
+                // Set current date automatically (if date input exists)
+                const today = new Date().toISOString().split('T')[0];
+                const dateInput = document.querySelector('input[type="date"]');
+                if (dateInput) {
+                    dateInput.value = today;
+                }
+            }
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
+            loadDriverInfo();
             loadTrucksList();
             loadCustomersList();
             updateRowDisplay();
