@@ -181,6 +181,14 @@
             margin: 0;
         }
         
+        .helper-text {
+            display: block;
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        
         /* Table */
         .printer-table {
             width: 100%;
@@ -400,8 +408,21 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="networkPath">Network Path / IP Address *</label>
-                    <input type="text" id="networkPath" placeholder="e.g., 192.168.1.100" required>
+                    <label for="connectionType">Connection Type *</label>
+                    <select id="connectionType" required>
+                        <option value="network">Network (UNC Path)</option>
+                        <option value="usb">USB (Local Port)</option>
+                        <option value="com">COM Port (Serial)</option>
+                        <option value="lpt">LPT Port (Parallel)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="printerPath" id="pathLabel">Network Path *</label>
+                    <input type="text" id="printerPath" placeholder="\\SERVER\PrinterName" required>
+                    <small id="pathHelper" class="helper-text">
+                        Example: \\SERVER\HPLabel or \\192.168.1.100\Printer
+                    </small>
                 </div>
                 
                 <div class="form-group checkbox-group">
@@ -546,9 +567,11 @@
             document.getElementById('editingPrinterId').value = '';
             document.getElementById('printerName').value = '';
             document.getElementById('printerType').value = '';
-            document.getElementById('networkPath').value = '';
+            document.getElementById('connectionType').value = 'network';
+            document.getElementById('printerPath').value = '';
             document.getElementById('isActive').checked = true;
             document.getElementById('printerForm').classList.add('active');
+            updatePathFieldForConnectionType();
             document.getElementById('printerName').focus();
         }
         
@@ -561,7 +584,8 @@
         function savePrinter() {
             const name = document.getElementById('printerName').value.trim();
             const type = document.getElementById('printerType').value;
-            const networkPath = document.getElementById('networkPath').value.trim();
+            const connectionType = document.getElementById('connectionType').value;
+            const path = document.getElementById('printerPath').value.trim();
             const isActive = document.getElementById('isActive').checked;
             const editingId = document.getElementById('editingPrinterId').value;
             
@@ -574,8 +598,18 @@
                 alert('Please select a printer type');
                 return;
             }
-            if (!networkPath) {
-                alert('Please enter a network path or IP address');
+            if (!connectionType) {
+                alert('Please select a connection type');
+                return;
+            }
+            if (!path) {
+                alert('Please enter a connection path');
+                return;
+            }
+            
+            // Validate path format based on connection type
+            if (!validateConnectionPath(connectionType, path)) {
+                alert(`Invalid ${connectionType.toUpperCase()} path format. Please check the example.`);
                 return;
             }
             
@@ -584,7 +618,9 @@
                 id: editingId || 'printer_' + Date.now(),
                 name: name,
                 type: type,
-                networkPath: networkPath,
+                connectionType: connectionType,
+                connectionPath: path,
+                networkPath: path,  // Keep for backward compatibility
                 isActive: isActive
             };
             
@@ -611,13 +647,21 @@
             const printer = DataHub.getPrinterById(printerId);
             if (!printer) return;
             
+            // Migrate old data if needed
+            const migratedPrinter = migratePrinterData(printer);
+            
             document.getElementById('formTitle').textContent = 'Edit Printer';
-            document.getElementById('editingPrinterId').value = printer.id;
-            document.getElementById('printerName').value = printer.name;
-            document.getElementById('printerType').value = printer.type;
-            document.getElementById('networkPath').value = printer.networkPath;
-            document.getElementById('isActive').checked = printer.isActive;
+            document.getElementById('editingPrinterId').value = migratedPrinter.id;
+            document.getElementById('printerName').value = migratedPrinter.name;
+            document.getElementById('printerType').value = migratedPrinter.type;
+            document.getElementById('connectionType').value = migratedPrinter.connectionType || 'network';
+            document.getElementById('printerPath').value = migratedPrinter.connectionPath || migratedPrinter.networkPath;
+            document.getElementById('isActive').checked = migratedPrinter.isActive;
             document.getElementById('printerForm').classList.add('active');
+            
+            // Update path field UI
+            updatePathFieldForConnectionType();
+            
             document.getElementById('printerName').focus();
         }
         
@@ -637,8 +681,16 @@
         
         // Load printer list
         function loadPrinterList() {
-            const printers = DataHub.getAllPrinters();
+            let printers = DataHub.getAllPrinters();
             const container = document.getElementById('printerListContainer');
+            
+            // Migrate old data
+            printers = printers.map(migratePrinterData);
+            
+            // Save migrated data back
+            if (printers.length > 0) {
+                localStorage.setItem('printers', JSON.stringify(printers));
+            }
             
             if (printers.length === 0) {
                 container.innerHTML = `
@@ -656,7 +708,7 @@
                         <tr>
                             <th>Printer Name</th>
                             <th>Type</th>
-                            <th>Network Path</th>
+                            <th>Connection</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -667,12 +719,14 @@
             printers.forEach(printer => {
                 const statusClass = printer.isActive ? 'status-active' : 'status-inactive';
                 const statusText = printer.isActive ? 'Active' : 'Inactive';
+                const connectionBadge = getConnectionBadge(printer.connectionType || 'network');
+                const displayPath = printer.connectionPath || printer.networkPath;
                 
                 html += `
                     <tr>
                         <td><strong>${printer.name}</strong></td>
                         <td>${printer.type}</td>
-                        <td>${printer.networkPath}</td>
+                        <td>${connectionBadge} ${displayPath}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>
                             <div class="action-buttons">
@@ -729,8 +783,94 @@
             });
         }
         
+        // Update path field based on connection type
+        function updatePathFieldForConnectionType() {
+            const connectionType = document.getElementById('connectionType').value;
+            const pathLabel = document.getElementById('pathLabel');
+            const pathInput = document.getElementById('printerPath');
+            const pathHelper = document.getElementById('pathHelper');
+            
+            const configs = {
+                network: {
+                    label: 'Network Path *',
+                    placeholder: '\\\\SERVER\\PrinterName',
+                    helper: 'Example: \\\\SERVER\\HPLabel or \\\\192.168.1.100\\Printer'
+                },
+                usb: {
+                    label: 'USB Port *',
+                    placeholder: 'USB001',
+                    helper: 'Example: USB001, USB002, or USB003'
+                },
+                com: {
+                    label: 'COM Port *',
+                    placeholder: 'COM1',
+                    helper: 'Example: COM1, COM2, COM3, COM4'
+                },
+                lpt: {
+                    label: 'LPT Port *',
+                    placeholder: 'LPT1',
+                    helper: 'Example: LPT1 or LPT2'
+                }
+            };
+            
+            const config = configs[connectionType] || configs.network;
+            pathLabel.textContent = config.label;
+            pathInput.placeholder = config.placeholder;
+            pathHelper.textContent = config.helper;
+        }
+        
+        // Validate connection path based on type
+        function validateConnectionPath(connectionType, path) {
+            const patterns = {
+                network: /^\\\\[\w\d\.\-]+\\[\w\d\.\-]+$/,  // \\SERVER\Printer or \\IP\Printer
+                usb: /^USB\d{3}$/i,  // USB001, USB002, etc.
+                com: /^COM\d{1,2}$/i,  // COM1 through COM99
+                lpt: /^LPT[1-2]$/i  // LPT1 or LPT2
+            };
+            
+            const pattern = patterns[connectionType];
+            return pattern ? pattern.test(path) : false;
+        }
+        
+        // Get connection badge emoji
+        function getConnectionBadge(connectionType) {
+            const badges = {
+                network: '🌐',
+                usb: '🔌',
+                com: '📟',
+                lpt: '🖨️'
+            };
+            return badges[connectionType] || '🖨️';
+        }
+        
+        // Migrate old printer data to new format
+        function migratePrinterData(printer) {
+            // If old format (has networkPath but no connectionType)
+            if (printer.networkPath && !printer.connectionType) {
+                printer.connectionType = 'network';
+                printer.connectionPath = printer.networkPath;
+                // Keep networkPath for backward compatibility
+            }
+            
+            // If connectionPath doesn't exist, use networkPath
+            if (!printer.connectionPath && printer.networkPath) {
+                printer.connectionPath = printer.networkPath;
+            }
+            
+            return printer;
+        }
+        
         // Initialize on load
         initPage();
+        
+        // Add event listener for connection type changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const connectionTypeSelect = document.getElementById('connectionType');
+            if (connectionTypeSelect) {
+                connectionTypeSelect.addEventListener('change', updatePathFieldForConnectionType);
+                updatePathFieldForConnectionType(); // Set initial state
+            }
+        });
     </script>
 </body>
 </html>
