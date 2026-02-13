@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bill of Lading Signature</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 80%; margin: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        #signatureCanvas { border: 1px solid black; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bill of Lading Signature Page</h1>
+
+        <h2>Driver Information</h2>
+        <p>Name: <input type="text" id="driverName" placeholder="Enter driver name" /></p>
+        <p>License Plate: <input type="text" id="licensePlate" placeholder="Enter license plate" /></p>
+
+        <h2>Pallet Information</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Pallet ID</th>
+                    <th>Weight (kg)</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody id="palletTableBody">
+                <!-- Dynamic content will be inserted here -->
+            </tbody>
+        </table>
+
+        <h2>Signature</h2>
+        <canvas id="signatureCanvas" width="400" height="200"></canvas>
+        <br />
+        <button id="clearCanvas">Clear Signature</button>
+
+        <h2>Export to CSV</h2>
+        <button id="exportCSV">Export as CSV</button>
+
+    </div>
+
+    <script>
+        const canvas = document.getElementById('signatureCanvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        canvas.addEventListener('mousedown', () => { drawing = true; });
+        canvas.addEventListener('mouseup', () => { drawing = false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', draw);
+
+        function draw(event) {
+            if (!drawing) return;
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000';
+
+            ctx.lineTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop);
+        }
+
+        document.getElementById('clearCanvas').addEventListener('click', () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+
+        document.getElementById('exportCSV').addEventListener('click', () => {
+            const rows = [['Pallet ID', 'Weight (kg)', 'Description']];
+            const pallets = document.querySelectorAll('#palletTableBody tr');
+            pallets.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                rows.push([cols[0].innerText, cols[1].innerText, cols[2].innerText]);
+            });
+            let csvContent = 'data:text/csv;charset=utf-8,';
+            rows.forEach(e => {
+                csvContent += e.join(',') + '\n';
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'pallet_info.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>
