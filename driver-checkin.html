@@ -377,9 +377,11 @@
             
             // Disable button and show loading state to prevent double-submission
             const submitBtn = document.getElementById('startBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Loading...';
-            submitBtn.style.opacity = '0.7';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Loading...';
+                submitBtn.style.opacity = '0.7';
+            }
             
             const driverName = document.getElementById('driverName').value.trim();
             const truckNumber = document.getElementById('truckNumber').value.trim();
