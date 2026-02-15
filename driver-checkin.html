@@ -219,11 +219,41 @@
                 padding: 25px;
             }
         }
+        .mode-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: #ff9800;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 2;
+}
+.mode-btn:active,
+.mode-btn:focus {
+    background: #e08b00;
+}
+
+/* Make form elements bigger and more touch-friendly in tablet mode */
+body.tablet-mode input,
+body.tablet-mode button,
+body.tablet-mode select {
+    font-size: 1.4em !important;
+    padding: 20px !important;
+}
+body.tablet-mode label {
+    font-size: 1.3em !important;
+}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <button id="tabletModeBtn" class="mode-btn" type="button">Tablet Choice</button>
             <h1>🚛 Schmidt Potato</h1>
             <p>Driver Check-In</p>
             <a href="dashboard.html" class="home-btn">🏠 HOME</a>
@@ -456,6 +486,11 @@
                     </div>
                     
                     <div class="instructions">
+                    <div class="header">
+    <button id="tabletModeBtn" class="mode-btn" type="button">
+    <h1>Driver Check-In</h1>
+    <p>Scan your QR code or enter details below</p>
+    <!-- ... any other content ... -->
                         <h3>📱 For Drivers:</h3>
                         <ol>
                             <li>Open your phone camera</li>
@@ -476,5 +511,15 @@
             setTimeout(() => printWindow.print(), 500);
         }
     </script>
+   <script>
+document.getElementById('tabletModeBtn').addEventListener('click', function() {
+    document.body.classList.toggle('tablet-mode');
+    if(document.body.classList.contains('tablet-mode')) {
+        this.textContent = "Normal Mode";
+    } else {
+        this.textContent = "Tablet Choice";
+    }
+});
+</script> 
 </body>
 </html>
