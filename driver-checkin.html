@@ -6,121 +6,143 @@
     <title>Driver Check-In - Schmidt Potato</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
-        .dc-container {
-            display: flex;
-            align-items: flex-start;
-            gap: 44px;
-        }
-        .dc-main-content {
-            flex: 2;
-            min-width: 0;
-        }
-        .dc-driver-panel {
-            flex: 1;
-            background: #eef3fa;
-            border-radius: 12px;
-            box-shadow: 0 4px 18px rgba(30,60,114,0.07);
-            padding: 28px 32px;
-            min-width: 310px;
-            max-width: 430px;
-            margin-left: auto;
-        }
-        @media (max-width: 900px) {
-            .dc-container {
-                flex-direction: column;
-                gap: 0;
-            }
-            .dc-driver-panel {
-                margin-left: 0;
-                margin-top: 20px;
-                max-width: unset;
-                width: 100%;
-            }
-        }
-    </style>
-</head>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 20px 0;
         }
-        
         .container {
-            max-width: 600px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 0 20px;
         }
-        
         .header {
             background: white;
             border-radius: 12px;
-            padding: 20px;
+            padding: 20px 20px 10px 20px;
             text-align: center;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 36px;
             position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.11);
         }
-        
         .header h1 {
             color: #1e3c72;
-            font-size: 2em;
             margin-bottom: 5px;
+            font-size: 2em;
         }
-        
         .header p {
             color: #666;
-            font-size: 0.9em;
+            font-size: 1em;
         }
-        
+        .mode-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1em;
+        }
         .home-btn {
             position: absolute;
             top: 20px;
             right: 20px;
-            padding: 10px 20px;
             background: #1e3c72;
             color: white;
-            text-decoration: none;
             border-radius: 8px;
+            padding: 10px 20px;
             font-weight: 600;
-            font-size: 0.9em;
+            text-decoration: none;
         }
-        
-        .home-btn:hover {
-            background: #2a5298;
+        .main-columns {
+            display: flex;
+            gap: 56px;
+            align-items: flex-start;
         }
-        
-        .form-card {
+        @media (max-width: 1050px) {
+            .main-columns {
+                flex-direction: column;
+                gap: 0;
+                align-items: stretch;
+            }
+            .left-col, .right-col {
+                max-width: 650px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+        .left-col {
+            flex: 1.25;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .left-col h2 {
+            color: #112366;
+            margin: 12px 0 20px 0;
+            text-align: left;
+            width: 100%;
+        }
+        .card {
             background: white;
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+            padding: 28px 22px;
+            width: 100%;
+            max-width: 480px;
+            margin-bottom: 22px;
+            text-align: center;
         }
-        
-        .form-card h2 {
+        .qr-section h3 {
             color: #1e3c72;
-            margin-bottom: 25px;
-            font-size: 1.5em;
+            margin-bottom: 14px;
         }
-        
-        .form-group {
-            margin-bottom: 20px;
+        .btn-print {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 13px 30px;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-top: 18px;
+            cursor: pointer;
         }
-        
-        label {
+        .instructions {
+            text-align: left;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+            padding: 22px 24px;
+            max-width: 480px;
+            margin-bottom: 0;
+        }
+        .instructions strong {
             display: block;
-            font-weight: 600;
             margin-bottom: 8px;
-            color: #333;
         }
-        
+        .instructions ol {
+            padding-left: 22px;
+        }
+        .right-col {
+            flex: 1.05;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .form-panel {
+            background: #eef3fa;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(30,60,114,0.07);
+            padding: 34px 38px 28px 38px;
+            max-width: 430px;
+            width: 100%;
+            margin-top: 12px;
+        }
+        .form-group { margin-bottom: 20px; }
+        label { font-weight: 600; margin-bottom: 7px; display: block;}
         input {
             width: 100%;
             padding: 12px;
@@ -129,23 +151,9 @@
             font-size: 1em;
             transition: border-color 0.3s;
         }
-        
-        input:focus {
-            outline: none;
-            border-color: #1e3c72;
-        }
-        
-        input.error {
-            border-color: #ff4444;
-        }
-        
-        .error-message {
-            color: #ff4444;
-            font-size: 0.85em;
-            margin-top: 5px;
-            display: none;
-        }
-        
+        input:focus { outline: none; border-color: #1e3c72;}
+        input.error { border-color: #ff4444; }
+        .error-message { color: #ff4444; font-size: 0.91em; margin-top: 4px; display: none;}
         .btn-start {
             width: 100%;
             padding: 18px;
@@ -156,301 +164,121 @@
             font-size: 1.2em;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
             margin-top: 10px;
         }
-        
-        .btn-start:hover:not(:disabled) {
-            background: #45a049;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+        .btn-start:disabled { background: #ccc; cursor: not-allowed;}
+        body.tablet-mode input, body.tablet-mode button, body.tablet-mode select { font-size: 1.25em !important; padding: 20px !important; }
+        body.tablet-mode label { font-size: 1.16em !important; }
+        @media (max-width: 650px){
+            .form-panel, .card, .instructions { padding: 14px 4vw; }
         }
-        
-        .btn-start:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-        
-        .qr-section {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .qr-section h3 {
-            color: #1e3c72;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        #qr-checkin {
-            display: inline-block;
-            margin: 20px auto;
-        }
-        
-        .btn-print {
-            padding: 12px 30px;
-            background: #1e3c72;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn-print:hover {
-            background: #2a5298;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(30, 60, 114, 0.4);
-        }
-        
-        .instructions {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        
-        .instructions h3 {
-            color: #1e3c72;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-        }
-        
-        .instructions ol {
-            margin-left: 20px;
-            line-height: 2;
-            color: #333;
-        }
-        
-        .instructions li {
-            margin-bottom: 8px;
-        }
-        
-        @media (max-width: 768px) {
-            .home-btn {
-                position: static;
-                display: block;
-                margin: 10px auto 0;
-                width: fit-content;
-            }
-            
-            .header {
-                padding-bottom: 60px;
-            }
-            
-            body {
-                padding: 10px;
-            }
-            
-            .form-card {
-                padding: 25px;
-            }
-        }
-        .mode-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: #ff9800;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
-    font-size: 1em;
-    font-weight: 600;
-    cursor: pointer;
-    z-index: 2;
-}
-.mode-btn:active,
-.mode-btn:focus {
-    background: #e08b00;
-}
-
-/* Make form elements bigger and more touch-friendly in tablet mode */
-body.tablet-mode input,
-body.tablet-mode button,
-body.tablet-mode select {
-    font-size: 1.4em !important;
-    padding: 20px !important;
-}
-body.tablet-mode label {
-    font-size: 1.3em !important;
-}
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <button id="tabletModeBtn" class="mode-btn" type="button">Tablet Choice</button>
-            <h1>🚛 Schmidt Potato</h1>
-            <p>Driver Check-In</p>
-            <a href="dashboard.html" class="home-btn">🏠 HOME</a>
+<div class="container">
+    <div class="header">
+        <button id="tabletModeBtn" class="mode-btn" type="button">Tablet Choice</button>
+        <h1>🚛 Schmidt Potato</h1>
+        <p>Driver Check-In</p>
+        <a href="dashboard.html" class="home-btn">🏠 HOME</a>
+    </div>
+    <div class="main-columns">
+        <div class="left-col">
+            <h2>Welcome to Schmidt Potato</h2>
+            <div class="card qr-section">
+                <h3>📱 Mobile Check-In QR Code</h3>
+                <div id="qr-checkin"></div>
+                <button class="btn-print" onclick="printQRCode()">🖨️ Print QR Code</button>
+            </div>
+            <div class="instructions card">
+                <strong>For Drivers:</strong>
+                <ol>
+                    <li>Scan QR code with your phone camera</li>
+                    <li>Enter your name, truck name, truck number, phone, and customer PO#</li>
+                    <li>Tap "Start Loading"</li>
+                    <li>Begin scanning pallets</li>
+                </ol>
+            </div>
         </div>
-        <div class="dc-container">
-  <div class="dc-main-content">
-    <h2>Welcome to Schmidt Potato</h2>
-    <p>Scan the QR code or enter your details to start Driver Check-In.</p>
-    <div id="qr-checkin"></div>
-  </div>
-  <div class="dc-driver-panel">
-    <form id="checkinForm">
-      <div class="form-group">
-        <label for="driverName">Driver Name *</label>
-        <input type="text" id="driverName" placeholder="Enter your full name" required>
-        <div class="error-message" id="driverNameError">Please enter your name</div>
-      </div>
-      <div class="form-group">
-        <label for="truckName">Truck Name *</label>
-        <input type="text" id="truckName" placeholder="Enter descriptive truck name" required>
-        <div class="error-message" id="truckNameError">Please enter truck name</div>
-      </div>
-      <div class="form-group">
-        <label for="truckNumber">Truck Number *</label>
-        <input type="text" id="truckNumber" placeholder="Enter truck number" required>
-        <div class="error-message" id="truckNumberError">Please enter truck number</div>
-      </div>
-      <div class="form-group">
-        <label for="phoneNumber">Phone Number *</label>
-        <input type="tel" id="phoneNumber" placeholder="701-555-1234" required>
-        <div class="error-message" id="phoneNumberError">Please enter a valid phone number</div>
-      </div>
-      <div class="form-group">
-        <label for="customerPO">Customer PO# *</label>
-        <input type="text" id="customerPO" placeholder="Enter Customer PO#" required>
-        <div class="error-message" id="customerPOError">Please enter Customer PO#</div>
-      </div>
-      <button type="submit" class="btn-start" id="startBtn">✅ Start Loading</button>
-    </form>
-  </div>
-        <div class="form-card">
-            <h2>Driver Information</h2>
-            <form id="checkinForm">
-                <div class="form-group">
-                    <label for="driverName">Driver Name *</label>
-                    <input type="text" id="driverName" placeholder="Enter your full name" required>
-                    <div class="error-message" id="driverNameError">Please enter your name</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="truckNumber">Truck Number *</label>
-                    <input type="text" id="truckNumber" placeholder="Enter truck number" required>
-                    <div class="error-message" id="truckNumberError">Please enter truck number</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="phoneNumber">Phone Number *</label>
-                    <input type="tel" id="phoneNumber" placeholder="701-555-1234" required>
-                    <div class="error-message" id="phoneNumberError">Please enter a valid phone number</div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="customerPO">Customer PO# *</label>
-                    <input type="text" id="customerPO" placeholder="Enter Customer PO#" required>
-                    <div class="error-message" id="customerPOError">Please enter Customer PO#</div>
-                </div>
-                
-                <button type="submit" class="btn-start" id="startBtn">✅ Start Loading</button>
-            </form>
-        </div>
-        
-        <div class="qr-section">
-            <h3>📱 Mobile Check-In QR Code</h3>
-            <div id="qr-checkin"></div>
-            <button class="btn-print" onclick="printQRCode()">🖨️ Print QR Code</button>
-        </div>
-        
-        <div class="instructions">
-            <h3>📱 For Drivers:</h3>
-            <ol>
-                <li>Scan QR code with your phone camera</li>
-                <li>Enter your name, truck number, phone, and customer PO#</li>
-                <li>Tap "Start Loading"</li>
-                <li>Begin scanning pallets</li>
-            </ol>
+        <div class="right-col">
+            <div class="form-panel">
+                <form id="checkinForm">
+                    <div class="form-group">
+                        <label for="driverName">Driver Name *</label>
+                        <input type="text" id="driverName" required placeholder="Enter your full name">
+                        <div class="error-message" id="driverNameError">Please enter your name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="truckName">Truck Name *</label>
+                        <input type="text" id="truckName" required placeholder="Enter descriptive truck name">
+                        <div class="error-message" id="truckNameError">Please enter truck name</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="truckNumber">Truck Number *</label>
+                        <input type="text" id="truckNumber" required placeholder="Enter truck number">
+                        <div class="error-message" id="truckNumberError">Please enter truck number</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number *</label>
+                        <input type="tel" id="phoneNumber" required placeholder="701-555-1234">
+                        <div class="error-message" id="phoneNumberError">Please enter a valid phone number</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPO">Customer PO# *</label>
+                        <input type="text" id="customerPO" required placeholder="Enter Customer PO#">
+                        <div class="error-message" id="customerPOError">Please enter Customer PO#</div>
+                    </div>
+                    <button type="submit" class="btn-start" id="startBtn">✅ Start Loading</button>
+                </form>
+            </div>
         </div>
     </div>
+</div>
+<script>
+    // Tablet Mode Toggle
+    document.getElementById('tabletModeBtn').addEventListener('click', function() {
+        document.body.classList.toggle('tablet-mode');
+        if(document.body.classList.contains('tablet-mode')) {
+            this.textContent = "Normal Mode";
+        } else {
+            this.textContent = "Tablet Choice";
+        }
+    });
 
-    <script>
-        // Generate QR code
-        if (typeof QRCode !== 'undefined') {
-            new QRCode(document.getElementById("qr-checkin"), {
-                text: "https://bluetagseed.github.io/schmidt-potato-system/driver-checkin.html",
-                width: 300,
-                height: 300,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-        
-        // Phone number formatting
-        const phoneInput = document.getElementById('phoneNumber');
-        phoneInput.addEventListener('input', function(e) {
-            let value = e.target.value.replace(/\D/g, '');
-            
-            if (value.length > 6) {
-                value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
-            } else if (value.length > 3) {
-                value = value.slice(0, 3) + '-' + value.slice(3);
-            }
-            
-            e.target.value = value;
+    // Generate QR code
+    if (typeof QRCode !== 'undefined') {
+        new QRCode(document.getElementById("qr-checkin"), {
+            text: "https://bluetagseed.github.io/schmidt-potato-system/driver-checkin.html",
+            width: 230,
+            height: 230,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
         });
-        
-        // Form validation
-        function validateForm() {
-            const driverName = document.getElementById('driverName').value.trim();
-            const truckNumber = document.getElementById('truckNumber').value.trim();
-            const phoneNumber = document.getElementById('phoneNumber').value.trim();
-            const customerPO = document.getElementById('customerPO').value.trim();
-            
-            let isValid = true;
-            
-            // Validate driver name
-            if (!driverName) {
-                showError('driverName', 'Please enter your name');
-                isValid = false;
-            } else {
-                clearError('driverName');
-            }
-            
-            // Validate truck number
-            if (!truckNumber) {
-                showError('truckNumber', 'Please enter truck number');
-                isValid = false;
-            } else {
-                clearError('truckNumber');
-            }
-            
-            // Validate phone number
-            const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
-            if (!phoneNumber) {
-                showError('phoneNumber', 'Please enter your phone number');
-                isValid = false;
-            } else if (!phoneRegex.test(phoneNumber)) {
-                showError('phoneNumber', 'Please enter a valid phone number (XXX-XXX-XXXX)');
-                isValid = false;
-            } else {
-                clearError('phoneNumber');
-            }
-            
-            // Validate customer PO
-            if (!customerPO) {
-                showError('customerPO', 'Please enter Customer PO#');
-                isValid = false;
-            } else {
-                clearError('customerPO');
-            }
-            
-            return isValid;
+    }
+
+    // Phone number formatting
+    const phoneInput = document.getElementById('phoneNumber');
+    phoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 6) {
+            value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6, 10);
+        } else if (value.length > 3) {
+            value = value.slice(0, 3) + '-' + value.slice(3);
         }
-        
+        e.target.value = value;
+    });
+
+    // Form validation/redirect
+    document.getElementById('checkinForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const driverName = document.getElementById('driverName').value.trim();
+        const truckName = document.getElementById('truckName').value.trim();
+        const truckNumber = document.getElementById('truckNumber').value.trim();
+        const phoneNumber = document.getElementById('phoneNumber').value.trim();
+        const customerPO = document.getElementById('customerPO').value.trim();
+
+        let isValid = true;
         function showError(fieldId, message) {
             const input = document.getElementById(fieldId);
             const errorEl = document.getElementById(fieldId + 'Error');
@@ -458,137 +286,86 @@ body.tablet-mode label {
             errorEl.textContent = message;
             errorEl.style.display = 'block';
         }
-        
         function clearError(fieldId) {
             const input = document.getElementById(fieldId);
             const errorEl = document.getElementById(fieldId + 'Error');
             input.classList.remove('error');
             errorEl.style.display = 'none';
         }
-        
-        // Form submission
-        document.getElementById('checkinForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            if (!validateForm()) {
-                return;
-            }
-            
-            // Disable button and show loading state to prevent double-submission
-            const submitBtn = document.getElementById('startBtn');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Loading...';
-                submitBtn.style.opacity = '0.7';
-            }
-            
-            const driverName = document.getElementById('driverName').value.trim();
-            const truckNumber = document.getElementById('truckNumber').value.trim();
-            const phoneNumber = document.getElementById('phoneNumber').value.trim();
-            const customerPO = document.getElementById('customerPO').value.trim();
-            
-            // Build URL with parameters
-            const params = new URLSearchParams({
-                driver: driverName,
-                truck: truckNumber,
-                phone: phoneNumber,
-                po: customerPO,
-                checkin: 'true'
-            });
-            
-            // Redirect to truck loading chart
-            window.location.href = `truck-loading-chart.html?${params.toString()}`;
-        });
-        
-        // Print QR code function
-        function printQRCode() {
-            const printWindow = window.open('', '_blank');
-            const qrCodeImg = document.getElementById('qr-checkin').querySelector('img').src;
-            
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Schmidt Potato - Driver Check-In QR Code</title>
-                    <style>
-                        body { 
-                            font-family: Arial, sans-serif; 
-                            text-align: center; 
-                            padding: 40px;
-                        }
-                        .header {
-                            font-size: 24px;
-                            font-weight: bold;
-                            margin-bottom: 10px;
-                        }
-                        .subheader {
-                            font-size: 16px;
-                            margin-bottom: 30px;
-                            color: #666;
-                        }
-                        .qr-code {
-                            margin: 40px auto;
-                            width: 400px;
-                            height: 400px;
-                        }
-                        .instructions {
-                            margin-top: 40px;
-                            text-align: left;
-                            max-width: 600px;
-                            margin-left: auto;
-                            margin-right: auto;
-                        }
-                        .instructions h3 {
-                            margin-bottom: 15px;
-                        }
-                        .instructions ol {
-                            line-height: 1.8;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="header">SCHMIDT POTATO - DRIVER CHECK-IN</div>
-                    <div class="subheader">Sabin, MN 56580 | 218-493-4254</div>
-                    
-                    <div class="qr-code">
-                        <img src="${qrCodeImg}" width="400" height="400" />
-                    </div>
-                    
-                    <div class="instructions">
-                    <div class="header">
-    <button id="tabletModeBtn" class="mode-btn" type="button">
-    <h1>Driver Check-In</h1>
-    <p>Scan your QR code or enter details below</p>
-    <!-- ... any other content ... -->
-                        <h3>📱 For Drivers:</h3>
-                        <ol>
-                            <li>Open your phone camera</li>
-                            <li>Point at the QR code above</li>
-                            <li>Tap the notification</li>
-                            <li>Enter your name, truck number, phone, and customer PO#</li>
-                            <li>Tap "Start Loading"</li>
-                            <li>Begin scanning pallets</li>
-                        </ol>
-                        <p style="margin-top: 20px;"><strong>Questions? Call 218-493-4254</strong></p>
-                    </div>
-                </body>
-                </html>
-            `);
-            
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => printWindow.print(), 500);
+        if (!driverName) { showError('driverName', 'Please enter your name'); isValid = false; } else { clearError('driverName'); }
+        if (!truckName) { showError('truckName', 'Please enter truck name'); isValid = false; } else { clearError('truckName'); }
+        if (!truckNumber) { showError('truckNumber', 'Please enter truck number'); isValid = false; } else { clearError('truckNumber'); }
+        const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
+        if (!phoneNumber) { showError('phoneNumber', 'Please enter your phone number'); isValid = false; }
+        else if (!phoneRegex.test(phoneNumber)) { showError('phoneNumber', 'Please enter a valid phone number (XXX-XXX-XXXX)'); isValid = false; }
+        else { clearError('phoneNumber'); }
+        if (!customerPO) { showError('customerPO', 'Please enter Customer PO#'); isValid = false; } else { clearError('customerPO'); }
+
+        if (!isValid) return;
+
+        // Disable button and show loading state
+        const submitBtn = document.getElementById('startBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Loading...';
+            submitBtn.style.opacity = '0.7';
         }
-    </script>
-   <script>
-document.getElementById('tabletModeBtn').addEventListener('click', function() {
-    document.body.classList.toggle('tablet-mode');
-    if(document.body.classList.contains('tablet-mode')) {
-        this.textContent = "Normal Mode";
-    } else {
-        this.textContent = "Tablet Choice";
+        // Build URL with all parameters, including truckName
+        const params = new URLSearchParams({
+            driver: driverName,
+            truck: truckNumber,
+            truckname: truckName,
+            phone: phoneNumber,
+            po: customerPO,
+            checkin: 'true'
+        });
+        window.location.href = `truck-loading-chart.html?${params.toString()}`;
+    });
+
+    // Print QR code function
+    function printQRCode() {
+        const printWindow = window.open('', '_blank');
+        const qrCodeImg = document.getElementById('qr-checkin').querySelector('img').src;
+        printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Schmidt Potato - Driver Check-In QR Code</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 40px; }
+                    .header { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+                    .subheader { font-size: 16px; margin-bottom: 30px; color: #666; }
+                    .qr-code { margin: 40px auto; width: 400px; height: 400px; }
+                    .instructions { margin-top: 40px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto; }
+                    .instructions h3 { margin-bottom: 15px; }
+                    .instructions ol { line-height: 1.8; }
+                </style>
+            </head>
+            <body>
+                <div class="header">SCHMIDT POTATO - DRIVER CHECK-IN</div>
+                <div class="subheader">Sabin, MN 56580 | 218-493-4254</div>
+                <div class="qr-code">
+                    <img src="${qrCodeImg}" width="400" height="400" />
+                </div>
+                <div class="instructions">
+                    <h3>📱 For Drivers:</h3>
+                    <ol>
+                        <li>Open your phone camera</li>
+                        <li>Point at the QR code above</li>
+                        <li>Tap the notification</li>
+                        <li>Enter your name, truck name, truck number, phone, and customer PO#</li>
+                        <li>Tap "Start Loading"</li>
+                        <li>Begin scanning pallets</li>
+                    </ol>
+                    <p style="margin-top: 20px;"><strong>Questions? Call 218-493-4254</strong></p>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => printWindow.print(), 500);
     }
-});
-</script> 
+</script>
 </body>
 </html>
