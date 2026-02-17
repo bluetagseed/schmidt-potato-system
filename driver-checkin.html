@@ -6,6 +6,40 @@
     <title>Driver Check-In - Schmidt Potato</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
+        .dc-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 44px;
+        }
+        .dc-main-content {
+            flex: 2;
+            min-width: 0;
+        }
+        .dc-driver-panel {
+            flex: 1;
+            background: #eef3fa;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(30,60,114,0.07);
+            padding: 28px 32px;
+            min-width: 310px;
+            max-width: 430px;
+            margin-left: auto;
+        }
+        @media (max-width: 900px) {
+            .dc-container {
+                flex-direction: column;
+                gap: 0;
+            }
+            .dc-driver-panel {
+                margin-left: 0;
+                margin-top: 20px;
+                max-width: unset;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+    <style>
         * {
             margin: 0;
             padding: 0;
